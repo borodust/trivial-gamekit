@@ -2,14 +2,14 @@
 
 Simplified interface to cl-bodge facilities.
 
-## Installation
+## Installation and loading
 
 ```lisp
 ;; add cl-bodge distribution into quicklisp
 (ql-dist:install-dist "http://bodge.borodust.org/dist/org.borodust.bodge.txt")
 
-;; load precompiled native libraries and the app
-(ql:quickload :trivial-gamekit)
+;; load precompiled native libraries and the gamekit
+(ql:quickload '(:bodge-blobs :trivial-gamekit))
 ```
 
 
