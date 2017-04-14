@@ -1,6 +1,14 @@
 # trivial-gamekit
 
-Simplified interface to cl-bodge facilities.
+Simplified interface to [cl-bodge](https://github.com/borodust/cl-bodge) facilities.
+
+
+## Requirements
+
+* OpenGL 4.1+
+* 64-bit (x86_64) Windows, GNU/Linux or macOS
+* x86_64 SBCL or CCL
+
 
 ## Installation and loading
 
@@ -14,6 +22,7 @@ Simplified interface to cl-bodge facilities.
 
 
 ## Example
+
 ```lisp
 (cl:defpackage :trivial-gamekit-example
   (:use :cl :ge :trivial-gamekit))
@@ -23,10 +32,17 @@ Simplified interface to cl-bodge facilities.
 (defclass example (gamekit-system) ())
 
 (defmethod draw ((this example))
-  (print-text "Hello, Gamedev!" 10.0 10.0)
-  (draw-rect (vec2 0 0) 205 42
-             :stroke-paint (vec4 0.8 0.6 0.6 1.0)
-             :rounding 5.0))
+  (print-text "Hello, Gamedev!" 240.0 240.0))
 
 (start 'example)
 ```
+
+
+## Documentation
+
+See `trivial-gamekit` [wiki](https://github.com/borodust/trivial-gamekit/wiki).
+
+
+## Help
+
+`#lispgames` at `irc://chat.freenode.net`

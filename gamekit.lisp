@@ -15,6 +15,7 @@
 
 (defclass gamekit-system (enableable generic-system)
   ((keymap :initform nil)
+   (cursor-action :initform nil)
    (viewport-width :initarg :viewport-width :initform 640)
    (viewport-height :initarg :viewport-height :initform 480)
    (viewport-title :initarg :viewport-title :initform "Trivial Gamekit")
@@ -30,10 +31,6 @@
   (engine-system 'gamekit-system))
 
 
-(defgeneric simulate (system)
-  (:method ((system gamekit-system)) (declare (ignore system))))
-
-
 (defgeneric draw (system)
   (:method ((system gamekit-system)) (declare (ignore system))))
 
@@ -46,19 +43,29 @@
         (call-next-method)))))
 
 
-(defgeneric blare (system)
-  (:method ((system gamekit-system)) (declare (ignore system))))
+(defun subscribe-to-events (system)
+  (with-slots (keymap cursor-action) system
+    (subscribe-body-to (keyboard-event (key state)) (events)
+      (when-let ((action (getf (gethash key keymap) state)))
+        (funcall action)))
+
+    (subscribe-body-to (mouse-event (button state)) (events)
+      (when-let ((action (getf (gethash button keymap) state)))
+        (funcall action)))
+
+    (subscribe-body-to (cursor-event (x y)) (events)
+      (when cursor-action
+        (funcall cursor-action x y)))))
 
 
 (defmethod initialize-system :after ((this gamekit-system))
   (with-slots (keymap viewport-title viewport-width viewport-height
-                      text-renderer canvas)
+                              text-renderer canvas)
       this
     (register-resource-loader (make-resource-loader (asset-path "font.brf")))
     (setf keymap (make-hash-table))
-    (subscribe-body-to (keyboard-event (key state)) (events)
-      (when-let ((action (getf (gethash key keymap) state)))
-        (funcall action)))
+
+    (subscribe-to-events this)
 
     (run (>> (-> ((host)) ()
                (setf (viewport-title) viewport-title)
@@ -75,25 +82,27 @@
                                          :antialiased t)))
              (concurrently ()
                (let (looped-flow)
-                 (setf looped-flow (>> (-> ((physics)) ()
-                                         (observe-universe 1/60)
-                                         (simulate this))
-                                       (-> ((graphics)) ()
+                 (setf looped-flow (>> (-> ((graphics)) ()
                                          (draw this)
                                          (swap-buffers (host)))
-                                       (-> ((audio)) ()
-                                         (blare this))
                                        (instantly ()
                                          (when (enabledp this)
                                            (run looped-flow)))))
                  (run looped-flow)))))))
 
 
-(defun bind-key (key state action)
+(defun bind-button (key state action)
   (let ((gamekit (gamekit)))
     (with-slots (keymap) gamekit
       (with-system-lock-held (gamekit)
         (setf (getf (gethash key keymap) state) action)))))
+
+
+(defun bind-cursor (action)
+  (let ((gamekit (gamekit)))
+    (with-slots (cursor-action) gamekit
+      (with-system-lock-held (gamekit)
+        (setf cursor-action action)))))
 
 
 (defun print-text (string x y &optional color)

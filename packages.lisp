@@ -8,7 +8,6 @@
 
            gamekit-system
            print-text
-           simulate
            draw
-           blare
-           bind-key))
+           bind-button
+           bind-cursor))
