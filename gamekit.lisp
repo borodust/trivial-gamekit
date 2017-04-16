@@ -13,6 +13,9 @@
   (merge-pathnames file +assets-directory+))
 
 
+(defvar *gamekit-instance* nil)
+
+
 (defclass gamekit-system (enableable generic-system)
   ((keymap :initform nil)
    (cursor-action :initform nil)
@@ -28,7 +31,7 @@
 
 
 (definline gamekit ()
-  (engine-system 'gamekit-system))
+  *gamekit-instance*)
 
 
 (defgeneric draw (system)
@@ -43,29 +46,33 @@
         (call-next-method)))))
 
 
-(defun subscribe-to-events (system)
-  (with-slots (keymap cursor-action) system
-    (subscribe-body-to (keyboard-event (key state)) (events)
-      (when-let ((action (getf (gethash key keymap) state)))
-        (funcall action)))
+(define-event-handler on-keyboard-event keyboard-event (ev key state)
+  (with-slots (keymap) (gamekit)
+    (when-let ((action (getf (gethash key keymap) state)))
+      (funcall action))))
 
-    (subscribe-body-to (mouse-event (button state)) (events)
-      (when-let ((action (getf (gethash button keymap) state)))
-        (funcall action)))
 
-    (subscribe-body-to (cursor-event (x y)) (events)
-      (when cursor-action
-        (funcall cursor-action x y)))))
+(define-event-handler on-mouse-event mouse-event  (ev button state)
+  (with-slots (keymap) (gamekit)
+    (when-let ((action (getf (gethash button keymap) state)))
+      (funcall action))))
+
+
+(define-event-handler on-cursor-event cursor-event (ev x y)
+  (with-slots (cursor-action) (gamekit)
+    (when cursor-action
+      (funcall cursor-action x y))))
 
 
 (defmethod initialize-system :after ((this gamekit-system))
   (with-slots (keymap viewport-title viewport-width viewport-height
                               text-renderer canvas)
       this
+    (when *gamekit-instance*
+      (error "Only one active system of type 'gamekit-system is allowed"))
     (register-resource-loader (make-resource-loader (asset-path "font.brf")))
-    (setf keymap (make-hash-table))
-
-    (subscribe-to-events this)
+    (setf keymap (make-hash-table)
+          *gamekit-instance* this)
 
     (run (>> (-> ((host)) ()
                (setf (viewport-title) viewport-title)
@@ -89,6 +96,10 @@
                                          (when (enabledp this)
                                            (run looped-flow)))))
                  (run looped-flow)))))))
+
+
+(defmethod discard-system :before ((this gamekit-system))
+  (setf *gamekit-instance* nil))
 
 
 (defun bind-button (key state action)
@@ -115,3 +126,8 @@
 
 (defun stop ()
   (shutdown))
+
+
+(define-event-handler on-exit viewport-hiding-event (ev)
+  (in-new-thread "exit-thread"
+    (stop)))

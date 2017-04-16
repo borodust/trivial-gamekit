@@ -7,6 +7,7 @@
            stop
 
            gamekit-system
+           gamekit
            print-text
            draw
            bind-button
