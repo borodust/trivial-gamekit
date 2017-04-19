@@ -77,6 +77,8 @@
     (run (>> (-> ((host)) ()
                (setf (viewport-title) viewport-title)
                (setf (viewport-size) (vec2 viewport-width viewport-height)))
+             (-> ((graphics)) ()
+               (gl:viewport 0 0 viewport-width viewport-height))
              (-> ((physics)) ()
                (setf (gravity) (vec3 0.0 -9.81 0.0)))
              (resource-flow (font-resource-name "NotoSansUI-Regular.ttf"))
