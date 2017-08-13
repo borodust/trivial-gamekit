@@ -12,7 +12,7 @@
   :author "Pavel Korolev"
   :mailto "dev@borodust.org"
   :license "The Unlicense"
-  :depends-on (log4cl bodge-blobs cl-bodge)
+  :depends-on (log4cl cl-bodge)
   :serial t
   :components ((:file "packages")
                (:file "gamekit")))

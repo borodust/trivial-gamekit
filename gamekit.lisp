@@ -24,10 +24,7 @@
    (viewport-title :initarg :viewport-title :initform "Trivial Gamekit")
    (canvas :initform nil)
    (text-renderer :initform nil))
-  (:default-initargs :depends-on '(event-system
-                                   graphics-system
-                                   audio-system
-                                   physics-system)))
+  (:default-initargs :depends-on '(graphics-system)))
 
 
 (definline gamekit ()
@@ -46,19 +43,19 @@
         (call-next-method)))))
 
 
-(define-event-handler on-keyboard-event keyboard-event (ev key state)
+(define-event-handler on-keyboard-event ((ev keyboard-event) key state)
   (with-slots (keymap) (gamekit)
     (when-let ((action (getf (gethash key keymap) state)))
       (funcall action))))
 
 
-(define-event-handler on-mouse-event mouse-event  (ev button state)
+(define-event-handler on-mouse-event ((ev mouse-event) button state)
   (with-slots (keymap) (gamekit)
     (when-let ((action (getf (gethash button keymap) state)))
       (funcall action))))
 
 
-(define-event-handler on-cursor-event cursor-event (ev x y)
+(define-event-handler on-cursor-event ((ev cursor-event) x y)
   (with-slots (cursor-action) (gamekit)
     (when cursor-action
       (funcall cursor-action x y))))
@@ -77,12 +74,9 @@
     (run (>> (-> ((host)) ()
                (setf (viewport-title) viewport-title)
                (setf (viewport-size) (vec2 viewport-width viewport-height)))
-             (-> ((graphics)) ()
-               (gl:viewport 0 0 viewport-width viewport-height))
-             (-> ((physics)) ()
-               (setf (gravity) (vec3 0.0 -9.81 0.0)))
              (resource-flow (font-resource-name "NotoSansUI-Regular.ttf"))
              (-> ((graphics)) (font)
+               (gl:viewport 0 0 viewport-width viewport-height)
                (setf text-renderer (make-text-renderer viewport-width
                                                        viewport-height
                                                        font 32.0)
@@ -130,6 +124,6 @@
   (shutdown))
 
 
-(define-event-handler on-exit viewport-hiding-event (ev)
+(define-event-handler on-exit ((ev viewport-hiding-event))
   (in-new-thread "exit-thread"
     (stop)))

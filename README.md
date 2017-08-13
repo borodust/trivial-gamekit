@@ -1,6 +1,6 @@
 # trivial-gamekit
 
-Simplified interface to [cl-bodge](https://github.com/borodust/cl-bodge) facilities.
+Library for getting into gamedev with Common Lisp! Very simple interface to graphics, audio and input.
 
 
 ## Requirements
@@ -24,23 +24,19 @@ Simplified interface to [cl-bodge](https://github.com/borodust/cl-bodge) facilit
 ## Example
 
 ```lisp
-(cl:defpackage :trivial-gamekit-example
-  (:use :cl :ge :trivial-gamekit))
-(cl:in-package :trivial-gamekit-example)
 
+(defclass example (gamekit:gamekit-system) ())
 
-(defclass example (gamekit-system) ())
+(defmethod gamekit:draw ((this example))
+  (gamekit:print-text "Hello, Gamedev!" 240.0 240.0))
 
-(defmethod draw ((this example))
-  (print-text "Hello, Gamedev!" 240.0 240.0))
-
-(start 'example)
+(gamekit:start 'example)
 ```
 
 
 ## Documentation
 
-See `trivial-gamekit` [wiki](https://github.com/borodust/trivial-gamekit/wiki).
+See `trivial-gamekit` external [documentation](https://github.com/borodust/trivial-gamekit/wiki).
 
 
 ## Help
