@@ -11,6 +11,10 @@
            gamekit
            draw
 
+           initialize-resources
+           import-image
+           import-sound
+
            bind-button
            bind-cursor
 
@@ -22,4 +26,6 @@
            draw-ellipse
            draw-arc
            draw-polygon
-           draw-polyline))
+           draw-polyline
+
+           play))

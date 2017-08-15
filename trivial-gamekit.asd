@@ -15,4 +15,5 @@
   :depends-on (log4cl cl-bodge)
   :serial t
   :components ((:file "packages")
+               (:file "resources")
                (:file "gamekit")))

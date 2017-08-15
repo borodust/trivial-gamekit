@@ -19,12 +19,14 @@
 (defclass gamekit-system (enableable generic-system)
   ((keymap :initform nil)
    (cursor-action :initform nil)
+   (resource-path :initform nil :initarg :resource-path)
+   (resource-loader :initform nil)
    (viewport-width :initarg :viewport-width :initform 640)
    (viewport-height :initarg :viewport-height :initform 480)
    (viewport-title :initarg :viewport-title :initform "Trivial Gamekit")
    (canvas :initform nil)
    (text-renderer :initform nil))
-  (:default-initargs :depends-on '(graphics-system)))
+  (:default-initargs :depends-on '(graphics-system audio-system)))
 
 
 (definline gamekit ()
@@ -35,12 +37,22 @@
   (:method ((system gamekit-system)) (declare (ignore system))))
 
 
+(defgeneric initialize-resources (system)
+  (:method ((system gamekit-system)) (declare (ignore system))))
+
+
 (defmethod draw :around ((system gamekit-system))
   (with-slots (canvas text-renderer) system
     (with-canvas (canvas)
       (let ((*text-renderer* text-renderer))
         (gl:clear :color-buffer :depth-buffer :stencil-buffer)
         (call-next-method)))))
+
+
+(defmethod initialize-resources :around ((system gamekit-system))
+  (with-slots (resource-loader) system
+    (let ((*resource-loader* resource-loader))
+      (call-next-method))))
 
 
 (define-event-handler on-keyboard-event ((ev keyboard-event) key state)
@@ -63,14 +75,15 @@
 
 (defmethod initialize-system :after ((this gamekit-system))
   (with-slots (keymap viewport-title viewport-width viewport-height
-                              text-renderer canvas)
+                              text-renderer canvas resource-loader)
       this
     (when *gamekit-instance*
       (error "Only one active system of type 'gamekit-system is allowed"))
     (register-resource-loader (make-resource-loader (asset-path "font.brf")))
     (setf keymap (make-hash-table)
-          *gamekit-instance* this)
-
+          *gamekit-instance* this
+          resource-loader (make-instance 'gamekit-resource-loader))
+    (initialize-resources this)
     (run (>> (-> ((host)) ()
                (setf (viewport-title) viewport-title)
                (setf (viewport-size) (vec2 viewport-width viewport-height)))
@@ -83,6 +96,7 @@
                      canvas (make-canvas viewport-width
                                          viewport-height
                                          :antialiased t)))
+             (preloading-flow resource-loader)
              (concurrently ()
                (let (looped-flow)
                  (setf looped-flow (>> (-> ((graphics)) ()
@@ -98,6 +112,11 @@
   (setf *gamekit-instance* nil))
 
 
+(defun resource-by-id (id)
+  (with-slots (resource-loader) *gamekit-instance*
+    (%get-resource resource-loader id)))
+
+
 (defun bind-button (key state action)
   (let ((gamekit (gamekit)))
     (with-slots (keymap) gamekit
@@ -110,6 +129,11 @@
     (with-slots (cursor-action) gamekit
       (with-system-lock-held (gamekit)
         (setf cursor-action action)))))
+
+
+(defun play (sound-id)
+  (run (-> ((audio)) ()
+         (ge.snd:play-audio (resource-by-id sound-id)))))
 
 
 (defun print-text (string x y &optional color)
