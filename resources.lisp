@@ -18,19 +18,27 @@
           source))))
 
 
-(defun %load-resource (resource)
+(defun %load-image (path canvas-provider)
+  (>> (concurrently ()
+        (load-png-image path))
+      (-> ((graphics)) (image)
+        (ge.vg:make-image-paint image
+                                :canvas (funcall canvas-provider)
+                                :flip-vertically t))))
+
+
+(defun %load-resource (resource canvas-provider)
   (let ((type (car resource))
         (path (cdr resource)))
     (switch (type :test #'eq)
-      (:image (concurrently ()
-                (load-png-image path)))
+      (:image (%load-image path canvas-provider))
       (:sound (%load-sound path)))))
 
 
-(defun preloading-flow (loader)
+(defun preloading-flow (loader canvas-provider)
   (with-slots (resources) loader
     (let ((ids (loop for resource-id being the hash-key in resources collect resource-id)))
-      (>> (~> (loop for id in ids collect (%load-resource (gethash id resources))))
+      (>> (~> (loop for id in ids collect (%load-resource (gethash id resources) canvas-provider)))
           (concurrently (results)
             (loop for id in ids
                for result in (first results)

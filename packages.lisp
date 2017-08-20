@@ -7,6 +7,18 @@
   (:export start
            stop
 
+           vec2
+           vec3
+           vec4
+           mult
+           add
+           subt
+           div
+           x
+           y
+           z
+           w
+
            gamekit-system
            gamekit
            draw
@@ -27,5 +39,6 @@
            draw-arc
            draw-polygon
            draw-polyline
+           draw-image
 
            play))

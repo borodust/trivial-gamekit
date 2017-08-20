@@ -14,17 +14,18 @@ Library for getting into gamedev with Common Lisp! Very simple interface to grap
 
 ```lisp
 ;; add cl-bodge distribution into quicklisp
-(ql-dist:install-dist "http://bodge.borodust.org/dist/org.borodust.bodge.txt")
+(ql-dist:install-dist "http://bodge.borodust.org/dist/org.borodust.bodge.v0.4.txt")
 
 ;; load precompiled native libraries and the gamekit
-(ql:quickload '(:bodge-blobs :trivial-gamekit))
+(ql:quickload :trivial-gamekit)
 ```
 
 
 ## Example
 
-```lisp
+Copy-paste these into your Common Lisp REPL after loading `:trivial-gamekit`:
 
+```lisp
 (defclass example (gamekit:gamekit-system) ())
 
 (defmethod gamekit:draw ((this example))

@@ -1,6 +1,9 @@
 (in-package :trivial-gamekit)
 
 
+(defvar +origin+ (vec2 0.0 0.0))
+
+
 (declaim (special *text-renderer*))
 
 
@@ -24,7 +27,7 @@
    (viewport-width :initarg :viewport-width :initform 640)
    (viewport-height :initarg :viewport-height :initform 480)
    (viewport-title :initarg :viewport-title :initform "Trivial Gamekit")
-   (canvas :initform nil)
+   (canvas :initform nil :reader canvas-of)
    (text-renderer :initform nil))
   (:default-initargs :depends-on '(graphics-system audio-system)))
 
@@ -75,41 +78,38 @@
 
 (defmethod initialize-system :after ((this gamekit-system))
   (with-slots (keymap viewport-title viewport-width viewport-height
-                              text-renderer canvas resource-loader)
+                      text-renderer canvas resource-loader)
       this
     (when *gamekit-instance*
       (error "Only one active system of type 'gamekit-system is allowed"))
     (register-resource-loader (make-resource-loader (asset-path "font.brf")))
     (setf keymap (make-hash-table)
-          *gamekit-instance* this
           resource-loader (make-instance 'gamekit-resource-loader))
     (initialize-resources this)
-    (run (>> (-> ((host)) ()
-               (setf (viewport-title) viewport-title)
-               (setf (viewport-size) (vec2 viewport-width viewport-height)))
-             (resource-flow (font-resource-name "NotoSansUI-Regular.ttf"))
-             (-> ((graphics)) (font)
-               (gl:viewport 0 0 viewport-width viewport-height)
-               (setf text-renderer (make-text-renderer viewport-width
-                                                       viewport-height
-                                                       font 32.0)
-                     canvas (make-canvas viewport-width
-                                         viewport-height
-                                         :antialiased t)))
-             (preloading-flow resource-loader)
-             (concurrently ()
-               (let (looped-flow)
-                 (setf looped-flow (>> (-> ((graphics)) ()
-                                         (draw this)
-                                         (swap-buffers (host)))
-                                       (instantly ()
-                                         (when (enabledp this)
-                                           (run looped-flow)))))
-                 (run looped-flow)))))))
-
-
-(defmethod discard-system :before ((this gamekit-system))
-  (setf *gamekit-instance* nil))
+    (flet ((%get-canvas ()
+             canvas))
+      (run (>> (-> ((host)) ()
+                 (setf (viewport-title) viewport-title)
+                 (setf (viewport-size) (vec2 viewport-width viewport-height)))
+               (resource-flow (font-resource-name "NotoSansUI-Regular.ttf"))
+               (-> ((graphics)) (font)
+                 (gl:viewport 0 0 viewport-width viewport-height)
+                 (setf text-renderer (make-text-renderer viewport-width
+                                                         viewport-height
+                                                         font 32.0)
+                       canvas (make-canvas viewport-width
+                                           viewport-height
+                                           :antialiased t)))
+               (preloading-flow resource-loader #'%get-canvas)
+               (concurrently ()
+                 (let (looped-flow)
+                   (setf looped-flow (>> (-> ((graphics)) ()
+                                           (draw this)
+                                           (swap-buffers (host)))
+                                         (instantly ()
+                                           (when (enabledp this)
+                                             (run looped-flow)))))
+                   (run looped-flow))))))))
 
 
 (defun resource-by-id (id)
@@ -136,16 +136,28 @@
          (ge.snd:play-audio (resource-by-id sound-id)))))
 
 
+(defun draw-image (origin image-id)
+  (when-let ((image (resource-by-id image-id)))
+    (ge:push-canvas)
+    (unwind-protect
+         (progn
+           (ge:translate-canvas (x origin) (y origin))
+           (draw-rect +origin+ (width-of image) (height-of image) :fill-paint image))
+      (ge:pop-canvas))))
+
+
 (defun print-text (string x y &optional color)
   (draw-text *text-renderer* string :position (vec2 x y) :color color))
 
 
 (defun start (classname)
-  (startup `(:engine (:systems (,classname)))))
+  (startup `(:engine (:systems (,classname))))
+  (setf *gamekit-instance* (ge:engine-system classname)))
 
 
 (defun stop ()
-  (shutdown))
+  (shutdown)
+  (setf *gamekit-instance* nil))
 
 
 (define-event-handler on-exit ((ev viewport-hiding-event))
