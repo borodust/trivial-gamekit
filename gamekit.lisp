@@ -16,7 +16,7 @@
   (merge-pathnames file +assets-directory+))
 
 
-(defvar *gamekit-instance* nil)
+(defvar *gamekit-instance-class* nil)
 
 
 (defclass gamekit-system (enableable generic-system)
@@ -33,7 +33,7 @@
 
 
 (definline gamekit ()
-  *gamekit-instance*)
+  (ge.ng:engine-system *gamekit-instance-class*))
 
 
 (defgeneric draw (system)
@@ -80,8 +80,6 @@
   (with-slots (keymap viewport-title viewport-width viewport-height
                       text-renderer canvas resource-loader)
       this
-    (when *gamekit-instance*
-      (error "Only one active system of type 'gamekit-system is allowed"))
     (register-resource-loader (make-resource-loader (asset-path "font.brf")))
     (setf keymap (make-hash-table)
           resource-loader (make-instance 'gamekit-resource-loader))
@@ -113,7 +111,7 @@
 
 
 (defun resource-by-id (id)
-  (with-slots (resource-loader) *gamekit-instance*
+  (with-slots (resource-loader) (gamekit)
     (%get-resource resource-loader id)))
 
 
@@ -150,14 +148,16 @@
   (draw-text *text-renderer* string :position (vec2 x y) :color color))
 
 
-(defun start (classname)
-  (startup `(:engine (:systems (,classname))))
-  (setf *gamekit-instance* (ge:engine-system classname)))
+(defun start (classname &key (log-level :info))
+  (when *gamekit-instance-class*
+    (error "Only one active system of type 'gamekit-system is allowed"))
+  (setf *gamekit-instance-class* classname)
+  (startup `(:engine (:systems (,classname) :log-level ,log-level))))
 
 
 (defun stop ()
   (shutdown)
-  (setf *gamekit-instance* nil))
+  (setf *gamekit-instance-class* nil))
 
 
 (define-event-handler on-exit ((ev viewport-hiding-event))
