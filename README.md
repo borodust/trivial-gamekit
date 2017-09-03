@@ -5,7 +5,7 @@ Library for getting into gamedev with Common Lisp! Very simple interface to grap
 
 ## Requirements
 
-* OpenGL 4.1+
+* OpenGL 3.3+
 * 64-bit (x86_64) Windows, GNU/Linux or macOS
 * x86_64 SBCL or CCL
 
@@ -16,14 +16,14 @@ Library for getting into gamedev with Common Lisp! Very simple interface to grap
 ;; add cl-bodge distribution into quicklisp
 (ql-dist:install-dist "http://bodge.borodust.org/dist/org.borodust.bodge.txt")
 
-;; load precompiled native libraries and the gamekit
+;; load the gamekit
 (ql:quickload :trivial-gamekit)
 ```
 
 
 ## Example
 
-Copy-paste these into your Common Lisp REPL after loading `:trivial-gamekit`:
+Copy-paste these into your Common Lisp REPL after loading `trivial-gamekit`:
 
 ```lisp
 (defclass example (gamekit:gamekit-system) ())

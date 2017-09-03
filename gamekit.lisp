@@ -148,11 +148,12 @@
   (draw-text *text-renderer* string :position (vec2 x y) :color color))
 
 
-(defun start (classname &key (log-level :info))
+(defun start (classname &key (log-level :info) (opengl-version '(3 3)))
   (when *gamekit-instance-class*
     (error "Only one active system of type 'gamekit-system is allowed"))
   (setf *gamekit-instance-class* classname)
-  (startup `(:engine (:systems (,classname) :log-level ,log-level))))
+  (startup `(:engine (:systems (,classname) :log-level ,log-level)
+             :host (:opengl-version ,opengl-version))))
 
 
 (defun stop ()
