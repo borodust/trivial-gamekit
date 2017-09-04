@@ -44,6 +44,18 @@
   (:method ((system gamekit-system)) (declare (ignore system))))
 
 
+(defgeneric initialize-audio (system)
+  (:method ((system gamekit-system)) (declare (ignore system))))
+
+
+(defgeneric initialize-graphics (system)
+  (:method ((system gamekit-system)) (declare (ignore system))))
+
+
+(defgeneric initialize-host (system)
+  (:method ((system gamekit-system)) (declare (ignore system))))
+
+
 (defmethod draw :around ((system gamekit-system))
   (with-slots (canvas text-renderer) system
     (with-canvas (canvas)
@@ -88,7 +100,10 @@
              canvas))
       (run (>> (-> ((host)) ()
                  (setf (viewport-title) viewport-title)
-                 (setf (viewport-size) (vec2 viewport-width viewport-height)))
+                 (setf (viewport-size) (vec2 viewport-width viewport-height))
+                 (initialize-host this))
+               (-> ((audio)) ()
+                 (initialize-audio this))
                (resource-flow (font-resource-name "NotoSansUI-Regular.ttf"))
                (-> ((graphics)) (font)
                  (gl:viewport 0 0 viewport-width viewport-height)
@@ -97,7 +112,8 @@
                                                          font 32.0)
                        canvas (make-canvas viewport-width
                                            viewport-height
-                                           :antialiased t)))
+                                           :antialiased t))
+                 (initialize-graphics this))
                (preloading-flow resource-loader #'%get-canvas)
                (concurrently ()
                  (let (looped-flow)

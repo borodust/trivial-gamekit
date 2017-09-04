@@ -26,6 +26,9 @@
            initialize-resources
            import-image
            import-sound
+           initialize-host
+           initialize-graphics
+           initialize-audio
 
            bind-button
            bind-cursor
