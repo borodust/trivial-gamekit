@@ -22,7 +22,7 @@
 (defclass gamekit-system (enableable generic-system)
   ((keymap :initform nil)
    (cursor-action :initform nil)
-   (resource-path :initform nil :initarg :resource-path)
+   (resource-path :initform #p"~/" :initarg :resource-path)
    (resource-loader :initform nil)
    (viewport-width :initarg :viewport-width :initform 640)
    (viewport-height :initarg :viewport-height :initform 480)
@@ -76,9 +76,17 @@
       (funcall action))))
 
 
+(defun bodge-mouse-button->gamekit (bodge-button)
+  (case bodge-button
+    (:left :mouse-left)
+    (:right :mouse-right)
+    (:middle :mouse-middle)
+    (t bodge-button)))
+
+
 (define-event-handler on-mouse-event ((ev mouse-event) button state)
   (with-slots (keymap) (gamekit)
-    (when-let ((action (getf (gethash button keymap) state)))
+    (when-let ((action (getf (gethash (bodge-mouse-button->gamekit button) keymap) state)))
       (funcall action))))
 
 
@@ -90,7 +98,7 @@
 
 (defmethod initialize-system :after ((this gamekit-system))
   (with-slots (keymap viewport-title viewport-width viewport-height
-                      text-renderer canvas resource-loader)
+                      text-renderer canvas resource-loader resource-path)
       this
     (register-resource-loader (make-resource-loader (asset-path "font.brf")))
     (setf keymap (make-hash-table)
@@ -114,7 +122,7 @@
                                            viewport-height
                                            :antialiased t))
                  (initialize-graphics this))
-               (preloading-flow resource-loader #'%get-canvas)
+               (preloading-flow resource-loader #'%get-canvas resource-path)
                (concurrently ()
                  (let (looped-flow)
                    (setf looped-flow (>> (-> ((graphics)) ()

@@ -27,18 +27,20 @@
                                 :flip-vertically t))))
 
 
-(defun %load-resource (resource canvas-provider)
+(defun %load-resource (resource canvas-provider base-path)
   (let ((type (car resource))
-        (path (cdr resource)))
+        (path (merge-pathnames (cdr resource) base-path)))
     (switch (type :test #'eq)
       (:image (%load-image path canvas-provider))
       (:sound (%load-sound path)))))
 
 
-(defun preloading-flow (loader canvas-provider)
+(defun preloading-flow (loader canvas-provider base-path)
   (with-slots (resources) loader
     (let ((ids (loop for resource-id being the hash-key in resources collect resource-id)))
-      (>> (~> (loop for id in ids collect (%load-resource (gethash id resources) canvas-provider)))
+      (>> (~> (loop for id in ids collect (%load-resource (gethash id resources)
+                                                          canvas-provider
+                                                          base-path)))
           (concurrently (results)
             (loop for id in ids
                for result in (first results)
