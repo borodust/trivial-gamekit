@@ -37,7 +37,7 @@ Copy-paste these into your Common Lisp REPL after loading `trivial-gamekit`:
 
 ## Documentation
 
-See `trivial-gamekit` external [documentation](https://github.com/borodust/trivial-gamekit/wiki).
+See `trivial-gamekit` external [documentation](https://borodust.org/projects/trivial-gamekit/).
 
 
 ## Help
