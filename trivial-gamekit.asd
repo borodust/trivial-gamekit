@@ -12,7 +12,9 @@
   :author "Pavel Korolev"
   :mailto "dev@borodust.org"
   :license "The Unlicense"
-  :depends-on (log4cl cl-bodge)
+  :depends-on (log4cl cl-bodge/graphics cl-bodge/audio cl-bodge/host
+                      cl-bodge/resources cl-bodge/canvas cl-bodge/assets
+                      cl-bodge/text)
   :serial t
   :components ((:file "packages")
                (:file "resources")

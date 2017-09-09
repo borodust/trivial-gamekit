@@ -160,12 +160,12 @@
 
 (defun draw-image (origin image-id)
   (when-let ((image (resource-by-id image-id)))
-    (ge:push-canvas)
+    (push-canvas)
     (unwind-protect
          (progn
-           (ge:translate-canvas (x origin) (y origin))
+           (translate-canvas (x origin) (y origin))
            (draw-rect +origin+ (width-of image) (height-of image) :fill-paint image))
-      (ge:pop-canvas))))
+      (pop-canvas))))
 
 
 (defun print-text (string x y &optional color)

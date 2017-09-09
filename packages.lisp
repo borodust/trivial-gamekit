@@ -3,7 +3,9 @@
 
 (defpackage :trivial-gamekit
   (:nicknames :gamekit)
-  (:use :cl :ge :ge.util)
+  (:use :cl :cl-bodge.graphics :cl-bodge.audio :cl-bodge.engine
+        :cl-bodge.utils :cl-bodge.resources :cl-bodge.canvas
+        :cl-bodge.host :cl-bodge.assets :cl-bodge.text)
   (:export start
            stop
 
