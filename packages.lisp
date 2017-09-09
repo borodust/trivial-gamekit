@@ -31,6 +31,7 @@
            initialize-host
            initialize-graphics
            initialize-audio
+           post-initialize
 
            bind-button
            bind-cursor

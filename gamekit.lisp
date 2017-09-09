@@ -56,6 +56,10 @@
   (:method ((system gamekit-system)) (declare (ignore system))))
 
 
+(defgeneric post-initialize (system)
+  (:method ((system gamekit-system)) (declare (ignore system))))
+
+
 (defmethod draw :around ((system gamekit-system))
   (with-slots (canvas text-renderer) system
     (with-canvas (canvas)
@@ -124,6 +128,7 @@
                  (initialize-graphics this))
                (preloading-flow resource-loader #'%get-canvas resource-path)
                (concurrently ()
+                 (post-initialize this)
                  (let (looped-flow)
                    (setf looped-flow (>> (-> ((graphics)) ()
                                            (draw this)
