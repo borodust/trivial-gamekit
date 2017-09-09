@@ -125,6 +125,7 @@
                        canvas (make-canvas viewport-width
                                            viewport-height
                                            :antialiased t))
+                 (setf (swap-interval (host)) 1)
                  (initialize-graphics this))
                (preloading-flow resource-loader #'%get-canvas resource-path)
                (concurrently ()
