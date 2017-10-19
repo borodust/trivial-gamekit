@@ -26,6 +26,7 @@
    (resource-loader :initform nil)
    (viewport-width :initarg :viewport-width :initform 640)
    (viewport-height :initarg :viewport-height :initform 480)
+   (fullscreen-p :initarg :fullscreen-p :initform nil)
    (viewport-title :initarg :viewport-title :initform "Trivial Gamekit")
    (canvas :initform nil :reader canvas-of)
    (text-renderer :initform nil))
@@ -101,7 +102,7 @@
 
 
 (defmethod initialize-system :after ((this gamekit-system))
-  (with-slots (keymap viewport-title viewport-width viewport-height
+  (with-slots (keymap viewport-title viewport-width viewport-height fullscreen-p
                       text-renderer canvas resource-loader resource-path)
       this
     (register-resource-loader (make-resource-loader (asset-path "font.brf")))
@@ -112,6 +113,7 @@
              canvas))
       (run (>> (-> ((host)) ()
                  (setf (viewport-title) viewport-title)
+                 (setf (fullscreen-viewport-p) fullscreen-p)
                  (setf (viewport-size) (vec2 viewport-width viewport-height))
                  (initialize-host this))
                (-> ((audio)) ()
