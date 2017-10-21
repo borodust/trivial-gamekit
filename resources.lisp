@@ -22,9 +22,7 @@
   (>> (concurrently ()
         (load-png-image path))
       (-> ((graphics)) (image)
-        (ge.vg:make-image-paint image
-                                :canvas (funcall canvas-provider)
-                                :flip-vertically t))))
+        (ge.vg:make-image-paint image :canvas (funcall canvas-provider)))))
 
 
 (defun %load-resource (resource canvas-provider base-path)
