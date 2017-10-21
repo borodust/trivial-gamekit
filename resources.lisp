@@ -18,7 +18,7 @@
           source))))
 
 
-(defun %load-image (path canvas-provider)
+(defun %load-image (path canvas-provider &key)
   (>> (concurrently ()
         (load-png-image path))
       (-> ((graphics)) (image)
@@ -26,11 +26,11 @@
 
 
 (defun %load-resource (resource canvas-provider base-path)
-  (let ((type (car resource))
-        (path (merge-pathnames (cdr resource) base-path)))
-    (switch (type :test #'eq)
-      (:image (%load-image path canvas-provider))
-      (:sound (%load-sound path)))))
+  (destructuring-bind ((type . resource-path) &rest options &key &allow-other-keys) resource
+    (let ((path (merge-pathnames resource-path base-path)))
+      (switch (type :test #'eq)
+        (:image (apply #'%load-image path canvas-provider options))
+        (:sound (%load-sound path))))))
 
 
 (defun preloading-flow (loader canvas-provider base-path)
@@ -45,9 +45,9 @@
                do (setf (gethash id resources) result)))))))
 
 
-(defun %register-resource (loader type id path)
+(defun %register-resource (loader type id path &rest options &key &allow-other-keys)
   (with-slots (resources) loader
-    (setf (gethash id resources) (cons type path))))
+    (setf (gethash id resources) (nconc (list (cons type path)) options))))
 
 
 (defun %get-resource (loader id)

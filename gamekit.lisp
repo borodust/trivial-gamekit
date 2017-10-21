@@ -172,14 +172,18 @@
          (ge.snd:play-audio (resource-by-id sound-id)))))
 
 
-(defun draw-image (origin image-id)
+(defun draw-image (origin image-id &key image-origin image-end)
   (when-let ((image (resource-by-id image-id)))
-    (push-canvas)
-    (unwind-protect
-         (progn
-           (translate-canvas (x origin) (y origin))
-           (draw-rect +origin+ (width-of image) (height-of image) :fill-paint image))
-      (pop-canvas))))
+    (let* ((image-origin (or image-origin +origin+))
+           (image-width (if image-end
+                            (- (x image-end) (x image-origin))
+                            (width-of image)))
+           (image-height (if image-end
+                             (- (y image-end) (y image-origin))
+                             (height-of image))))
+      (with-pushed-canvas ()
+        (translate-canvas (- (x origin) (x image-origin)) (- (y origin) (y image-origin)))
+        (draw-rect image-origin image-width image-height :fill-paint image)))))
 
 
 (defun print-text (string x y &optional color)
