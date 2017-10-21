@@ -33,6 +33,12 @@
   (:default-initargs :depends-on '(graphics-system audio-system)))
 
 
+(defmethod initialize-instance :around ((this gamekit-system) &key)
+  (when (null *gamekit-instance-class*)
+    (error "Manual gamekit instance creation forbidden. Use #'gamekit:start"))
+  (call-next-method))
+
+
 (definline gamekit ()
   (ge.ng:engine-system *gamekit-instance-class*))
 
