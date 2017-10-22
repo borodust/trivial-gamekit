@@ -23,6 +23,7 @@
 
            gamekit-system
            gamekit
+           act
            draw
 
            initialize-resources

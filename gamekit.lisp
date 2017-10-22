@@ -43,6 +43,10 @@
   (ge.ng:engine-system *gamekit-instance-class*))
 
 
+(defgeneric act (system)
+  (:method ((system gamekit-system)) (declare (ignore system))))
+
+
 (defgeneric draw (system)
   (:method ((system gamekit-system)) (declare (ignore system))))
 
@@ -139,7 +143,9 @@
                (concurrently ()
                  (post-initialize this)
                  (let (looped-flow)
-                   (setf looped-flow (>> (-> ((graphics)) ()
+                   (setf looped-flow (>> (instantly ()
+                                           (act this))
+                                         (-> ((graphics)) ()
                                            (draw this)
                                            (swap-buffers (host)))
                                          (instantly ()
