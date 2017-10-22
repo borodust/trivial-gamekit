@@ -193,6 +193,7 @@
 
 
 (defun print-text (string x y &optional color)
+  (ge.vg:flush-canvas)
   (draw-text *text-renderer* string :position (vec2 x y) :color color))
 
 
