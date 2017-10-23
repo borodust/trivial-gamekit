@@ -4,6 +4,17 @@
 (declaim (special *resource-loader*))
 
 
+(defvar *resource-root* nil)
+
+
+(defun (setf resource-root) (path)
+  (setf *resource-root* path))
+
+
+(defun resource-root ()
+  *resource-root*)
+
+
 (defclass gamekit-resource-loader ()
   ((resources :initform (make-hash-table :test 'equal))))
 

@@ -22,7 +22,6 @@
 (defclass gamekit-system (enableable generic-system)
   ((keymap :initform nil)
    (cursor-action :initform nil)
-   (resource-path :initform #p"~/" :initarg :resource-path)
    (resource-loader :initform nil)
    (viewport-width :initarg :viewport-width :initform 640)
    (viewport-height :initarg :viewport-height :initform 480)
@@ -36,6 +35,8 @@
 (defmethod initialize-instance :around ((this gamekit-system) &key)
   (when (null *gamekit-instance-class*)
     (error "Manual gamekit instance creation forbidden. Use #'gamekit:start"))
+  (unless (resource-root)
+    (error "Resource root must be set. Use #'(setf resource-root)"))
   (call-next-method))
 
 
@@ -113,7 +114,7 @@
 
 (defmethod initialize-system :after ((this gamekit-system))
   (with-slots (keymap viewport-title viewport-width viewport-height fullscreen-p
-                      text-renderer canvas resource-loader resource-path)
+                      text-renderer canvas resource-loader)
       this
     (register-resource-loader (make-resource-loader (asset-path "font.brf")))
     (setf keymap (make-hash-table)
@@ -139,7 +140,7 @@
                                            :antialiased t))
                  (setf (swap-interval (host)) 1)
                  (initialize-graphics this))
-               (preloading-flow resource-loader #'%get-canvas resource-path)
+               (preloading-flow resource-loader #'%get-canvas (resource-root))
                (concurrently ()
                  (post-initialize this)
                  (let (looped-flow)
@@ -197,12 +198,13 @@
   (draw-text *text-renderer* string :position (vec2 x y) :color color))
 
 
-(defun start (classname &key (log-level :info) (opengl-version '(3 3)))
+(defun start (classname &key (log-level :info) (opengl-version '(3 3)) resource-root)
   (when *gamekit-instance-class*
     (error "Only one active system of type 'gamekit-system is allowed"))
   (setf *gamekit-instance-class* classname)
   (startup `(:engine (:systems (,classname) :log-level ,log-level)
-             :host (:opengl-version ,opengl-version))))
+             :host (:opengl-version ,opengl-version)
+             :gamekit (:resource-root ,resource-root))))
 
 
 (defun stop ()

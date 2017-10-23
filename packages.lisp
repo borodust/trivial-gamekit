@@ -21,6 +21,7 @@
            z
            w
 
+           resource-root
            gamekit-system
            gamekit
            act
