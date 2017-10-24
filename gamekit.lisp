@@ -35,8 +35,6 @@
 (defmethod initialize-instance :around ((this gamekit-system) &key)
   (when (null *gamekit-instance-class*)
     (error "Manual gamekit instance creation forbidden. Use #'gamekit:start"))
-  (unless (resource-root)
-    (error "Resource root must be set. Use #'(setf resource-root)"))
   (call-next-method))
 
 
@@ -201,6 +199,8 @@
 (defun start (classname &key (log-level :info) (opengl-version '(3 3)) resource-root)
   (when *gamekit-instance-class*
     (error "Only one active system of type 'gamekit-system is allowed"))
+  (unless (or (resource-root) resource-root)
+    (error "Resource root must be set. Use #'(setf resource-root)"))
   (setf *gamekit-instance-class* classname)
   (startup `(:engine (:systems (,classname) :log-level ,log-level)
              :host (:opengl-version ,opengl-version)
