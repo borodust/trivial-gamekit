@@ -1,21 +1,28 @@
 (in-package :trivial-gamekit)
 
 
-(declaim (special *resource-loader*))
+(declaim (special *resource-registry*))
 
 
-(defvar *resource-root* nil)
+(defvar *gamekit-assets-root*
+  (merge-pathnames "assets/" (asdf:component-pathname (asdf:find-system :trivial-gamekit))))
 
 
-(defun (setf resource-root) (path)
-  (setf *resource-root* path))
+(define-constant +font-name+ "/_gamekit/font/sdf/NotoSans-Regular.ttf"
+  :test #'equal)
 
 
-(defun resource-root ()
-  *resource-root*)
+(defun asset-path (file)
+  (merge-pathnames file *gamekit-assets-root*))
 
 
-(defclass gamekit-resource-loader ()
+(mount-container "/_gamekit/font/" (asset-path "font.brf"))
+
+
+(define-sdf-font +font-name+)
+
+
+(defclass gamekit-resource-registry ()
   ((resources :initform (make-hash-table :test 'equal))))
 
 
@@ -67,8 +74,8 @@
 
 
 (defun import-image (resource-id path)
-  (%register-resource *resource-loader* :image resource-id path))
+  (%register-resource *resource-registry* :image resource-id path))
 
 
 (defun import-sound (resource-id path)
-  (%register-resource *resource-loader* :sound resource-id path))
+  (%register-resource *resource-registry* :sound resource-id path))

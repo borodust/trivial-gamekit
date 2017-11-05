@@ -1,28 +1,20 @@
 (in-package :trivial-gamekit)
 
 
+(declaim (special *text-renderer*))
+
 (defvar +origin+ (vec2 0.0 0.0))
 
 
-(declaim (special *text-renderer*))
-
-
-(define-constant +assets-directory+
-    (merge-pathnames "assets/" (asdf:component-pathname (asdf:find-system :trivial-gamekit)))
-  :test #'equal)
-
-
-(defun asset-path (file)
-  (merge-pathnames file +assets-directory+))
-
-
 (defvar *gamekit-instance-class* nil)
+(defvar *exit-latch* nil)
 
 
 (defclass gamekit-system (enableable generic-system)
   ((keymap :initform nil)
    (cursor-action :initform nil)
-   (resource-loader :initform nil)
+   (resource-path :initarg :resource-path :initform nil)
+   (resource-registry)
    (viewport-width :initarg :viewport-width :initform 640)
    (viewport-height :initarg :viewport-height :initform 480)
    (fullscreen-p :initarg :fullscreen-p :initform nil)
@@ -79,8 +71,8 @@
 
 
 (defmethod initialize-resources :around ((system gamekit-system))
-  (with-slots (resource-loader) system
-    (let ((*resource-loader* resource-loader))
+  (with-slots (resource-registry) system
+    (let ((*resource-registry* resource-registry))
       (call-next-method))))
 
 
@@ -112,11 +104,10 @@
 
 (defmethod initialize-system :after ((this gamekit-system))
   (with-slots (keymap viewport-title viewport-width viewport-height fullscreen-p
-                      text-renderer canvas resource-loader)
+                      text-renderer canvas resource-registry resource-path)
       this
-    (register-resource-loader (make-resource-loader (asset-path "font.brf")))
     (setf keymap (make-hash-table)
-          resource-loader (make-instance 'gamekit-resource-loader))
+          resource-registry (make-instance 'gamekit-resource-registry))
     (initialize-resources this)
     (flet ((%get-canvas ()
              canvas))
@@ -127,18 +118,18 @@
                  (initialize-host this))
                (-> ((audio)) ()
                  (initialize-audio this))
-               (resource-flow (font-resource-name "NotoSansUI-Regular.ttf"))
-               (-> ((graphics)) (font)
-                 (gl:viewport 0 0 viewport-width viewport-height)
-                 (setf text-renderer (make-text-renderer viewport-width
-                                                         viewport-height
-                                                         font 32.0)
-                       canvas (make-canvas viewport-width
-                                           viewport-height
-                                           :antialiased t))
-                 (setf (swap-interval (host)) 1)
-                 (initialize-graphics this))
-               (preloading-flow resource-loader #'%get-canvas (resource-root))
+               (-> ((graphics)) ()
+                 (let ((font (build-sdf-font +font-name+)))
+                   (gl:viewport 0 0 viewport-width viewport-height)
+                   (setf text-renderer (make-text-renderer viewport-width
+                                                           viewport-height
+                                                           font 32.0)
+                         canvas (make-canvas viewport-width
+                                             viewport-height
+                                             :antialiased t))
+                   (setf (swap-interval (host)) 1)
+                   (initialize-graphics this)))
+               (preloading-flow resource-registry #'%get-canvas resource-path)
                (concurrently ()
                  (post-initialize this)
                  (let (looped-flow)
@@ -154,8 +145,8 @@
 
 
 (defun resource-by-id (id)
-  (with-slots (resource-loader) (gamekit)
-    (%get-resource resource-loader id)))
+  (with-slots (resource-registry) (gamekit)
+    (%get-resource resource-registry id)))
 
 
 (defun bind-button (key state action)
@@ -196,20 +187,21 @@
   (draw-text *text-renderer* string :position (vec2 x y) :color color))
 
 
-(defun start (classname &key (log-level :info) (opengl-version '(3 3)) resource-root)
+(defun start (classname &key (log-level :info) (opengl-version '(3 3)))
   (when *gamekit-instance-class*
     (error "Only one active system of type 'gamekit-system is allowed"))
-  (unless (or (resource-root) resource-root)
-    (error "Resource root must be set. Use #'(setf resource-root)"))
-  (setf *gamekit-instance-class* classname)
+  (setf *gamekit-instance-class* classname
+        *exit-latch* (mt:make-latch))
   (startup `(:engine (:systems (,classname) :log-level ,log-level)
-             :host (:opengl-version ,opengl-version)
-             :gamekit (:resource-root ,resource-root))))
+             :host (:opengl-version ,opengl-version))))
 
 
 (defun stop ()
   (shutdown)
-  (setf *gamekit-instance-class* nil))
+  (let ((latch *exit-latch*))
+    (setf *gamekit-instance-class* nil
+          *exit-latch* nil)
+    (mt:open-latch latch)))
 
 
 (define-event-handler on-exit ((ev viewport-hiding-event))
