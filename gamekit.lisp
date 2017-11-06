@@ -187,13 +187,17 @@
   (draw-text *text-renderer* string :position (vec2 x y) :color color))
 
 
-(defun start (classname &key (log-level :info) (opengl-version '(3 3)))
+(defun start (classname &key (log-level :info) (opengl-version '(3 3)) blocking)
   (when *gamekit-instance-class*
     (error "Only one active system of type 'gamekit-system is allowed"))
-  (setf *gamekit-instance-class* classname
-        *exit-latch* (mt:make-latch))
-  (startup `(:engine (:systems (,classname) :log-level ,log-level)
-             :host (:opengl-version ,opengl-version))))
+
+  (let ((exit-latch (mt:make-latch)))
+    (setf *gamekit-instance-class* classname
+          *exit-latch* exit-latch)
+    (startup `(:engine (:systems (,classname) :log-level ,log-level)
+                       :host (:opengl-version ,opengl-version)))
+    (when blocking
+      (mt:wait-for-latch exit-latch))))
 
 
 (defun stop ()
