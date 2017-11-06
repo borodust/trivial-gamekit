@@ -190,7 +190,8 @@
 (defun start (classname &key (log-level :info) (opengl-version '(3 3)) blocking)
   (when *gamekit-instance-class*
     (error "Only one active system of type 'gamekit-system is allowed"))
-
+  (when-let ((global-asset (global-asset-path)))
+    (mount-container "/_gamekit/" global-asset "/_gamekit/"))
   (let ((exit-latch (mt:make-latch)))
     (setf *gamekit-instance-class* classname
           *exit-latch* exit-latch)
@@ -211,3 +212,9 @@
 (define-event-handler on-exit ((ev viewport-hiding-event))
   (in-new-thread "exit-thread"
     (stop)))
+
+
+(defun global-asset-path ()
+  (when-bound 'cl-user::bodge-asset-path
+    (merge-pathnames (cl-user::bodge-asset-path)
+                     (directory-namestring (current-executable-path)))))
