@@ -21,11 +21,13 @@
            z
            w
 
-           resource-root
            gamekit-system
+           defgame
            gamekit
            act
            draw
+           define-image
+           define-sound
 
            initialize-resources
            import-image
