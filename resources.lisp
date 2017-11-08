@@ -12,10 +12,11 @@
 
 (define-constant +font-name+ (format nil "~A~A/"
                                      +kit-resource-root+
-                                     "/font/sdf/NotoSans-Regular.ttf")
+                                     "sdf/NotoSans-Regular.ttf")
   :test #'equal)
 
 (defvar *resources* nil)
+
 
 (defvar *gamekit-assets-root*
   (merge-pathnames "assets/" (asdf:component-pathname (asdf:find-system :trivial-gamekit))))
@@ -32,11 +33,13 @@
   (reduce #'merge-pathnames (list resource +kit-resource-root+)))
 
 
-(defun gamekit-asset-path (file)
+(defun kit-asset-path (file)
   (merge-pathnames file *gamekit-assets-root*))
 
 
-(mount-container "/_gamekit/font/" (gamekit-asset-path "font.brf"))
+(mount-container (kit-resource-path "sdf/")
+                 (kit-asset-path "font.brf")
+                 "/sdf/")
 
 
 (define-sdf-font +font-name+)
@@ -67,17 +70,13 @@
     (:audio (%load-sound resource-name))))
 
 
-(defun preloading-flow (loader canvas-provider base-paths)
+(defun preloading-flow (loader canvas-provider)
   (with-slots (resources) loader
-    (>> (~> (loop for (id type path) in *resources*
-               as resource-name = (game-resource-path id)
-               as resource-package = (find-package (symbol-package id))
-               as base-path = (gethash resource-package base-paths)
-               do (mount-filesystem resource-name (merge-pathnames path base-path))
-               collect (let ((id id)
-                             (resource-name resource-name)
-                             (type type))
-                         (>> (%load-resource resource-name type canvas-provider)
+    (>> (~> (loop for (id type) in *resources*
+               collect (when-let ((id id)
+                                  (type type)
+                                  (resource-path (game-resource-path id)))
+                         (>> (%load-resource resource-path type canvas-provider)
                              (instantly (resource)
                                (cons id resource))))))
         (concurrently ((results))
@@ -92,7 +91,9 @@
 
 (defun %get-resource (loader id)
   (with-slots (resources) loader
-    (gethash id resources)))
+    (if-let ((resource (gethash id resources)))
+      resource
+      (error "Resource with id ~A not found" id))))
 
 
 (defun register-game-resource (id path &rest handler-args)
@@ -112,3 +113,13 @@
 
 (defmacro define-image (name path)
   `(register-game-resource ,name ,path :image :type :png))
+
+
+(defun %mount-all (resource-package-alist)
+  (let ((package-table (alist-hash-table resource-package-alist)))
+    (loop for (id nil path) in *resources*
+       as base-path = (gethash (symbol-package id) package-table)
+       when base-path
+       do (mount-filesystem (game-resource-path id) (merge-pathnames path
+                                                                     base-path))
+       collect id)))

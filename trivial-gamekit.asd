@@ -19,3 +19,14 @@
   :components ((:file "packages")
                (:file "resources")
                (:file "gamekit")))
+
+
+(defsystem trivial-gamekit/distribution
+  :description "Distribution facilities for trivial-gamekit"
+  :version "0.0.1"
+  :author "Pavel Korolev"
+  :mailto "dev@borodust.org"
+  :license "The Unlicense"
+  :depends-on (trivial-gamekit cl-bodge/distribution)
+  :serial t
+  :components ((:file "distribution")))

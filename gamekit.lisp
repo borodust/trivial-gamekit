@@ -3,6 +3,7 @@
 
 (declaim (special *text-renderer*))
 
+
 (defvar +origin+ (vec2 0.0 0.0))
 
 
@@ -22,6 +23,10 @@
    (canvas :initform nil :reader canvas-of)
    (text-renderer :initform nil))
   (:default-initargs :depends-on '(graphics-system audio-system)))
+
+
+(defgeneric mount-all-resources (game-class)
+  (:method (game-class) (declare (ignore game-class))))
 
 
 (defgeneric configure-game (game)
@@ -68,19 +73,20 @@
                               (resource-path :resource-path)
                               (fullscreen-p :fullscreen-p))
               (alist-hash-table extended)
-            `(defmethod configure-game ((this ,name))
-               ,@(when viewport-width
-                   `((setf (slot-value this 'viewport-width) ,@viewport-width)))
-               ,@(when viewport-height
-                   `((setf (slot-value this 'viewport-height) ,@viewport-height)))
-               ,@(when viewport-title
-                   `((setf (slot-value this 'viewport-title) ,@viewport-title)))
+            `(progn
                ,@(when resource-path
-                   `((setf (slot-value this 'resource-path)
-                           (list ,@(loop for (package path) in resource-path
-                                      collect `(cons ,package ,path))))))
-               ,@(when fullscreen-p
-                   `((setf (slot-value this 'fullscreen-p) ,@fullscreen-p)))))))))
+                   `((defmethod mount-all-resources ((this (eql ',name)))
+                       (%mount-all (list ,@(loop for (package path) in resource-path
+                                              collect `(cons (find-package ,package) ,path)))))))
+               (defmethod configure-game ((this ,name))
+                 ,@(when viewport-width
+                     `((setf (slot-value this 'viewport-width) ,@viewport-width)))
+                 ,@(when viewport-height
+                     `((setf (slot-value this 'viewport-height) ,@viewport-height)))
+                 ,@(when viewport-title
+                     `((setf (slot-value this 'viewport-title) ,@viewport-title)))
+                 ,@(when fullscreen-p
+                     `((setf (slot-value this 'fullscreen-p) ,@fullscreen-p))))))))))
 
 
 (defmethod initialize-instance :around ((this gamekit-system) &key)
@@ -174,8 +180,8 @@
     (configure-game this)
     (setf keymap (make-hash-table)
           resource-registry (make-instance 'gamekit-resource-registry))
-    (unless (listp resource-path)
-      (setf resource-path (list (cons :keyword resource-path))))
+    (when resource-path
+      (mount-filesystem "/_asset/KEYWORD/" resource-path))
     (initialize-resources this)
     (flet ((%get-canvas ()
              canvas))
@@ -197,8 +203,7 @@
                                              :antialiased t))
                    (setf (swap-interval (host)) 1)
                    (initialize-graphics this)))
-               (preloading-flow resource-registry #'%get-canvas
-                                (make-package-resource-table resource-path))
+               (preloading-flow resource-registry #'%get-canvas)
                (concurrently ()
                  (post-initialize this)
                  (let (looped-flow)
@@ -259,11 +264,11 @@
 (defun start (classname &key (log-level :info) (opengl-version '(3 3)) blocking)
   (when *gamekit-instance-class*
     (error "Only one active system of type 'gamekit-system is allowed"))
-  (when-let ((global-asset (global-asset-path)))
-    (mount-container "/_gamekit/" global-asset "/_gamekit/"))
   (let ((exit-latch (mt:make-latch)))
     (setf *gamekit-instance-class* classname
           *exit-latch* exit-latch)
+    (unless (executablep)
+      (mount-all-resources classname))
     (startup `(:engine (:systems (,classname) :log-level ,log-level)
                        :host (:opengl-version ,opengl-version)))
     (when blocking
@@ -281,10 +286,3 @@
 (define-event-handler on-exit ((ev viewport-hiding-event))
   (in-new-thread "exit-thread"
     (stop)))
-
-
-(defun global-asset-path ()
-  (declare #+sbcl (sb-ext:muffle-conditions cl:style-warning))
-  (when-bound 'cl-user::bodge-asset-path
-    (merge-pathnames (cl-user::bodge-asset-path)
-                     (directory-namestring (current-executable-path)))))
