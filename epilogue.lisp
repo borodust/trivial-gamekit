@@ -12,7 +12,7 @@
 (defun trivial-gamekit::main (args)
   (declare (ignore args))
   (let ((game-class (%find-game-class)))
-    (gamekit:start game-class :blocking t :log-level :trace)))
+    (gamekit:start game-class :blocking t)))
 
 
 (defun mount-containers ()

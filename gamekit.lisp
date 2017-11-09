@@ -180,9 +180,11 @@
     (configure-game this)
     (setf keymap (make-hash-table)
           resource-registry (make-instance 'gamekit-resource-registry))
-    (when resource-path
-      (mount-filesystem "/_asset/KEYWORD/" resource-path))
     (initialize-resources this)
+    (unless (executablep)
+      (when resource-path
+        (%mount-all (list (cons (find-package :keyword) resource-path))))
+      (mount-all-resources (class-name-of this)))
     (flet ((%get-canvas ()
              canvas))
       (run (>> (-> ((host)) ()
@@ -267,8 +269,6 @@
   (let ((exit-latch (mt:make-latch)))
     (setf *gamekit-instance-class* classname
           *exit-latch* exit-latch)
-    (unless (executablep)
-      (mount-all-resources classname))
     (startup `(:engine (:systems (,classname) :log-level ,log-level)
                        :host (:opengl-version ,opengl-version)))
     (when blocking
