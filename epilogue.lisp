@@ -9,8 +9,7 @@
     (find-symbol (symbol-name (second *gamekit-game-class*)) package)))
 
 
-(defun trivial-gamekit::main (args)
-  (declare (ignore args))
+(defun trivial-gamekit::main ()
   (let ((game-class (%find-game-class)))
     (gamekit:start game-class :blocking t)))
 
