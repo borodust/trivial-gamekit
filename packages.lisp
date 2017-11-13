@@ -51,4 +51,9 @@
            draw-polyline
            draw-image
 
+           translate-canvas
+           rotate-canvas
+           scale-canvas
+           with-pushed-canvas
+
            play))
