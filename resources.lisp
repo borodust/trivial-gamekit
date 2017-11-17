@@ -51,9 +51,10 @@
 
 (defun %load-sound (resource-name)
   (>> (resource-flow resource-name)
-      (-> ((audio)) ((sound))
-        (let ((source (ge.snd:make-audio-source)))
-          (with-disposable ((buffer (ge.snd:make-audio-buffer sound)))
+      (concurrently ((sound))
+        (let* ((sys (audio))
+               (source (ge.snd:make-audio-source :system sys)))
+          (with-disposable ((buffer (ge.snd:make-audio-buffer sound :system sys)))
             (ge.snd:attach-audio-buffer buffer source))
           source))))
 
@@ -70,7 +71,7 @@
     (:audio (%load-sound resource-name))))
 
 
-(defun preloading-flow (loader canvas-provider)
+(defun loading-flow (loader canvas-provider)
   (with-slots (resources) loader
     (>> (~> (loop for (id type) in *resources*
                collect (when-let ((id id)
@@ -113,6 +114,10 @@
 
 (defmacro define-image (name path)
   `(register-game-resource ,name ,path :image :type :png))
+
+
+(defmacro define-sound (name path)
+  `(register-game-resource ,name ,path :audio))
 
 
 (defun %mount-all (resource-package-alist)

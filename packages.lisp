@@ -26,12 +26,15 @@
            gamekit
            act
            draw
+
            define-image
            define-sound
-
            initialize-resources
            import-image
            import-sound
+           prepare-resources
+           notice-resources
+
            initialize-host
            initialize-graphics
            initialize-audio

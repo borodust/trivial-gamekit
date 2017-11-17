@@ -19,8 +19,10 @@
    (viewport-width :initarg :viewport-width :initform 640)
    (viewport-height :initarg :viewport-height :initform 480)
    (fullscreen-p :initarg :fullscreen-p :initform nil)
+   (prepare-resources :initform nil)
    (viewport-title :initarg :viewport-title :initform "Trivial Gamekit")
    (canvas :initform nil :reader canvas-of)
+   (action-queue :initform (mt:make-guarded-reference nil))
    (text-renderer :initform nil))
   (:default-initargs :depends-on '(graphics-system audio-system)))
 
@@ -39,7 +41,8 @@
                               :viewport-height
                               :viewport-title
                               :resource-path
-                              :fullscreen-p))
+                              :fullscreen-p
+                              :prepare-resources))
      collect opt into extended
      else
      collect opt into std
@@ -71,7 +74,8 @@
                               (viewport-height :viewport-height)
                               (viewport-title :viewport-title)
                               (resource-path :resource-path)
-                              (fullscreen-p :fullscreen-p))
+                              (fullscreen-p :fullscreen-p)
+                              (prepare-resources :prepare-resources))
               (alist-hash-table extended)
             `(progn
                ,@(when resource-path
@@ -86,7 +90,11 @@
                  ,@(when viewport-title
                      `((setf (slot-value this 'viewport-title) ,@viewport-title)))
                  ,@(when fullscreen-p
-                     `((setf (slot-value this 'fullscreen-p) ,@fullscreen-p))))))))))
+                     `((setf (slot-value this 'fullscreen-p) ,@fullscreen-p)))
+                 ,@(multiple-value-bind (value exist-p) prepare-resources
+                     `((setf (slot-value this 'prepare-resources) ,(if exist-p
+                                                                       (first value)
+                                                                       t)))))))))))
 
 
 (defmethod initialize-instance :around ((this gamekit-system) &key)
@@ -173,9 +181,32 @@
     (alist-hash-table (mapcar #'to-package-pair resource-paths))))
 
 
+(defun push-action (game action)
+  (with-slots (action-queue) game
+    (mt:with-guarded-reference (action-queue)
+      (push action action-queue))))
+
+
+(defgeneric notice-resources (game &rest resource-names)
+  (:method ((this gamekit-system) &rest resource-names)
+    (declare (ignore this resource-names))))
+
+
+(defun prepare-resources (game &rest resource-names)
+  (with-slots (canvas resource-registry) game
+    (flet ((get-canvas ()
+             canvas)
+           (notify-game ()
+             (apply #'notice-resources game resource-names)))
+      (run (>> (loading-flow resource-registry #'get-canvas)
+               (instantly ()
+                 (push-action game #'notify-game)))))))
+
+
 (defmethod initialize-system :after ((this gamekit-system))
   (with-slots (keymap viewport-title viewport-width viewport-height fullscreen-p
-                      text-renderer canvas resource-registry resource-path)
+                      text-renderer canvas resource-registry resource-path
+                      prepare-resources action-queue)
       this
     (configure-game this)
     (setf keymap (make-hash-table)
@@ -205,11 +236,15 @@
                                              :antialiased t))
                    (setf (swap-interval (host)) 1)
                    (initialize-graphics this)))
-               (preloading-flow resource-registry #'%get-canvas)
+               (when prepare-resources (loading-flow resource-registry #'%get-canvas))
                (concurrently ()
                  (post-initialize this)
                  (let (looped-flow)
                    (setf looped-flow (>> (instantly ()
+                                           (mt:with-guarded-reference (action-queue)
+                                             (loop for action in action-queue
+                                                do (funcall action)
+                                                finally (setf action-queue nil)))
                                            (act this))
                                          (-> ((graphics)) ()
                                            (draw this)
