@@ -274,9 +274,20 @@
         (setf cursor-action action)))))
 
 
-(defun play (sound-id)
-  (run (-> ((audio)) ()
-         (ge.snd:play-audio (resource-by-id sound-id)))))
+(defun play-sound (sound-id &key looped-p)
+  (let ((source (resource-by-id sound-id)))
+    (when looped-p
+      (setf (ge.snd:audio-looped-p source) t))
+    (ge.snd:play-audio source)))
+
+
+(defun stop-sound (sound-id)
+  (ge.snd:stop-audio (resource-by-id sound-id)))
+
+
+(defun play (sound-id &key looped-p)
+  "Deprecated. Use #'play-sound instead"
+  (play-sound sound-id :looped-p looped-p))
 
 
 (defun draw-image (position image-id &key origin width height)

@@ -52,9 +52,8 @@
 (defun %load-sound (resource-name)
   (>> (resource-flow resource-name)
       (concurrently ((sound))
-        (let* ((sys (audio))
-               (source (ge.snd:make-audio-source :system sys)))
-          (with-disposable ((buffer (ge.snd:make-audio-buffer sound :system sys)))
+        (let* ((source (ge.snd:make-audio-source)))
+          (with-disposable ((buffer (ge.snd:make-audio-buffer sound)))
             (ge.snd:attach-audio-buffer buffer source))
           source))))
 

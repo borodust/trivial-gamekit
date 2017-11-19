@@ -59,4 +59,6 @@
            scale-canvas
            with-pushed-canvas
 
-           play))
+           play
+           play-sound
+           stop-sound))
