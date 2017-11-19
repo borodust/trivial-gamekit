@@ -19,7 +19,7 @@
    (viewport-width :initarg :viewport-width :initform 640)
    (viewport-height :initarg :viewport-height :initform 480)
    (fullscreen-p :initarg :fullscreen-p :initform nil)
-   (prepare-resources :initform nil)
+   (prepare-resources :initform t)
    (viewport-title :initarg :viewport-title :initform "Trivial Gamekit")
    (canvas :initform nil :reader canvas-of)
    (action-queue :initform (mt:make-guarded-reference nil))
