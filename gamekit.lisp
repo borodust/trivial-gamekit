@@ -7,7 +7,6 @@
 (defvar +origin+ (vec2 0.0 0.0))
 
 
-(defvar *gamekit-instance-class* nil)
 (defvar *exit-latch* nil)
 
 
@@ -189,16 +188,18 @@
 
 (defgeneric notice-resources (game &rest resource-names)
   (:method ((this gamekit-system) &rest resource-names)
-    (declare (ignore this resource-names))))
+    (declare (ignore this))
+    (log:trace "Resources loaded: ~A" resource-names)))
 
 
 (defun prepare-resources (game &rest resource-names)
+  (log:trace "Preparing resources: ~A" resource-names)
   (with-slots (canvas resource-registry) game
     (flet ((get-canvas ()
              canvas)
            (notify-game ()
              (apply #'notice-resources game resource-names)))
-      (run (>> (loading-flow resource-registry #'get-canvas)
+      (run (>> (loading-flow resource-registry #'get-canvas resource-names)
                (instantly ()
                  (push-action game #'notify-game)))))))
 
@@ -236,7 +237,9 @@
                                              :antialiased t))
                    (setf (swap-interval (host)) 1)
                    (initialize-graphics this)))
-               (when prepare-resources (loading-flow resource-registry #'%get-canvas))
+               (when prepare-resources (loading-flow resource-registry
+                                                     #'%get-canvas
+                                                     (mapcar #'car *resources*)))
                (concurrently ()
                  (post-initialize this)
                  (let (looped-flow)

@@ -4,6 +4,9 @@
 (declaim (special *resource-registry*))
 
 
+(defvar *gamekit-instance-class* nil)
+
+
 (define-constant +game-resource-root+ "/_asset/"
   :test #'equal)
 
@@ -70,9 +73,10 @@
     (:audio (%load-sound resource-name))))
 
 
-(defun loading-flow (loader canvas-provider)
+(defun loading-flow (loader canvas-provider resource-names)
   (with-slots (resources) loader
     (>> (~> (loop for (id type) in *resources*
+               when (member id resource-names :test #'eq)
                collect (when-let ((id id)
                                   (type type)
                                   (resource-path (game-resource-path id)))
@@ -100,7 +104,10 @@
   (let ((resource-path (game-resource-path id)))
     (register-resource resource-path
                        (apply #'make-resource-handler handler-args))
-    (pushnew (list id (first handler-args) path) *resources* :test #'eq :key #'first)))
+    (setf (assoc-value *resources* id) (list (first handler-args) path))
+    (when *gamekit-instance-class*
+      (mount-all-resources *gamekit-instance-class*)
+      (prepare-resources (engine-system *gamekit-instance-class*) id))))
 
 
 (defun import-image (resource-id path)
