@@ -19,6 +19,7 @@
   :test #'equal)
 
 (defvar *resources* nil)
+(defvar *resouce-packages* nil)
 
 
 (defvar *gamekit-assets-root*
@@ -75,6 +76,8 @@
 
 (defun loading-flow (loader canvas-provider resource-names)
   (with-slots (resources) loader
+    (unless (ge.ng:executablep)
+      (apply #'%mount-resources resource-names))
     (>> (~> (loop for (id type) in *resources*
                when (member id resource-names :test #'eq)
                collect (when-let ((id id)
@@ -88,6 +91,9 @@
              do (setf (gethash id resources) resource))))))
 
 
+(defun list-all-resources ()
+  (mapcar #'car *resources*))
+
 (defun %register-resource (loader type id path &rest options &key &allow-other-keys)
   (with-slots (resources) loader
     (setf (gethash id resources) (nconc (list (cons type path)) options))))
@@ -100,14 +106,44 @@
       (error "Resource with id ~A not found" id))))
 
 
+(defun register-resource-package (package-name path)
+  (setf (assoc-value *resouce-packages* (find-package package-name)) path))
+
+
+(defun %mount-resources (&rest resource-names)
+  (let ((package-table (alist-hash-table *resouce-packages*)))
+    (loop for id in resource-names
+       as (nil path) = (assoc-value *resources* id)
+       as base-path = (gethash (symbol-package id) package-table)
+       when base-path
+       do (mount-filesystem (game-resource-path id) (merge-pathnames path base-path))
+       collect id)))
+
+
+(defun %mount-packages (&rest package-names)
+  (let ((package-table (alist-hash-table *resouce-packages*)))
+    (loop for package-name in package-names
+       as package = (find-package package-name)
+       as base-path = (gethash package  package-table)
+       when base-path
+       append (loop for (id nil path) in *resources*
+                 when (eq package (symbol-package id))
+                 do (mount-filesystem (game-resource-path id) (merge-pathnames path base-path))
+                 and
+                 collect id))))
+
+
+(defun autoprepare (resource-id)
+  (when *gamekit-instance-class*
+    (%mount-resources resource-id)
+    (prepare-resources (engine-system *gamekit-instance-class*) resource-id)))
+
+
 (defun register-game-resource (id path &rest handler-args)
   (let ((resource-path (game-resource-path id)))
     (register-resource resource-path
                        (apply #'make-resource-handler handler-args))
-    (setf (assoc-value *resources* id) (list (first handler-args) path))
-    (when *gamekit-instance-class*
-      (mount-all-resources *gamekit-instance-class*)
-      (prepare-resources (engine-system *gamekit-instance-class*) id))))
+    (setf (assoc-value *resources* id) (list (first handler-args) path))))
 
 
 (defun import-image (resource-id path)
@@ -119,18 +155,14 @@
 
 
 (defmacro define-image (name path)
-  `(register-game-resource ,name ,path :image :type :png))
+  (once-only (name)
+    `(progn
+       (register-game-resource ,name ,path :image :type :png)
+       (autoprepare ,name))))
 
 
 (defmacro define-sound (name path)
-  `(register-game-resource ,name ,path :audio))
-
-
-(defun %mount-all (resource-package-alist)
-  (let ((package-table (alist-hash-table resource-package-alist)))
-    (loop for (id nil path) in *resources*
-       as base-path = (gethash (symbol-package id) package-table)
-       when base-path
-       do (mount-filesystem (game-resource-path id) (merge-pathnames path
-                                                                     base-path))
-       collect id)))
+  (once-only (name)
+    `(progn
+       (register-game-resource ,name ,path :audio)
+       (autoprepare ,name))))

@@ -26,10 +26,6 @@
   (:default-initargs :depends-on '(graphics-system audio-system)))
 
 
-(defgeneric mount-all-resources (game-class)
-  (:method (game-class) (declare (ignore game-class))))
-
-
 (defgeneric configure-game (game)
   (:method ((this gamekit-system)) (declare (ignore this))))
 
@@ -39,7 +35,6 @@
      if (member (first opt) '(:viewport-width
                               :viewport-height
                               :viewport-title
-                              :resource-path
                               :fullscreen-p
                               :prepare-resources))
      collect opt into extended
@@ -48,52 +43,32 @@
      finally (return (values std extended))))
 
 
-(defun expand-resource-path-registration (resource-paths)
-  (flet ((expand-mount-form (package path)
-           (let ((resource-path (format nil "~A~A/" +game-resource-root+
-                                        (package-name package))))
-             `(mount-filesystem ,resource-path ,path))))
-    (loop for (package-name path) in resource-paths
-       as package = (find-package package-name)
-       if package
-       collect (expand-mount-form package path)
-       else
-       do (error "Package with name ~A not found" package-name))))
-
-
 (defmacro defgame (name (&rest classes) &body ((&rest slots) &rest opts))
   (multiple-value-bind (std-opts extended) (split-opts opts)
-    (let* ((resource-paths (assoc-value opts :resource-path)))
-      `(progn
-         ,@(expand-resource-path-registration resource-paths)
-         (defclass ,name (gamekit-system ,@classes)
-           ,slots
-           ,@std-opts)
-         ,(with-hash-entries ((viewport-width :viewport-width)
-                              (viewport-height :viewport-height)
-                              (viewport-title :viewport-title)
-                              (resource-path :resource-path)
-                              (fullscreen-p :fullscreen-p)
-                              (prepare-resources :prepare-resources))
-              (alist-hash-table extended)
-            `(progn
-               ,@(when resource-path
-                   `((defmethod mount-all-resources ((this (eql ',name)))
-                       (%mount-all (list ,@(loop for (package path) in resource-path
-                                              collect `(cons (find-package ,package) ,path)))))))
-               (defmethod configure-game ((this ,name))
-                 ,@(when viewport-width
-                     `((setf (slot-value this 'viewport-width) ,@viewport-width)))
-                 ,@(when viewport-height
-                     `((setf (slot-value this 'viewport-height) ,@viewport-height)))
-                 ,@(when viewport-title
-                     `((setf (slot-value this 'viewport-title) ,@viewport-title)))
-                 ,@(when fullscreen-p
-                     `((setf (slot-value this 'fullscreen-p) ,@fullscreen-p)))
-                 ,@(multiple-value-bind (value exist-p) prepare-resources
-                     `((setf (slot-value this 'prepare-resources) ,(if exist-p
-                                                                       (first value)
-                                                                       t)))))))))))
+    `(progn
+       (defclass ,name (gamekit-system ,@classes)
+         ,slots
+         ,@std-opts)
+       ,(with-hash-entries ((viewport-width :viewport-width)
+                            (viewport-height :viewport-height)
+                            (viewport-title :viewport-title)
+                            (fullscreen-p :fullscreen-p)
+                            (prepare-resources :prepare-resources))
+            (alist-hash-table extended)
+          `(progn
+             (defmethod configure-game ((this ,name))
+               ,@(when viewport-width
+                   `((setf (slot-value this 'viewport-width) ,@viewport-width)))
+               ,@(when viewport-height
+                   `((setf (slot-value this 'viewport-height) ,@viewport-height)))
+               ,@(when viewport-title
+                   `((setf (slot-value this 'viewport-title) ,@viewport-title)))
+               ,@(when fullscreen-p
+                   `((setf (slot-value this 'fullscreen-p) ,@fullscreen-p)))
+               ,@(multiple-value-bind (value exist-p) prepare-resources
+                   `((setf (slot-value this 'prepare-resources) ,(if exist-p
+                                                                     (first value)
+                                                                     t))))))))))
 
 
 (defmethod initialize-instance :around ((this gamekit-system) &key)
@@ -215,8 +190,10 @@
     (initialize-resources this)
     (unless (executablep)
       (when resource-path
-        (%mount-all (list (cons (find-package :keyword) resource-path))))
-      (mount-all-resources (class-name-of this)))
+        (register-resource-package :keyword resource-path)
+        (%mount-packages :keyword))
+      (when prepare-resources
+        (apply #'%mount-resources (list-all-resources))))
     (flet ((%get-canvas ()
              canvas))
       (run (>> (-> ((host)) ()
@@ -239,7 +216,7 @@
                    (initialize-graphics this)))
                (when prepare-resources (loading-flow resource-registry
                                                      #'%get-canvas
-                                                     (mapcar #'car *resources*)))
+                                                     (list-all-resources)))
                (concurrently ()
                  (post-initialize this)
                  (let (looped-flow)

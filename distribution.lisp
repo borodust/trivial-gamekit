@@ -6,7 +6,7 @@
 
 
 (defun deliver (system-name game-class &key build-directory)
-  (trivial-gamekit::mount-all-resources game-class)
+  (apply #'trivial-gamekit::%mount-resources (trivial-gamekit::list-all-resources))
   (let ((game-class-package (make-symbol (package-name (symbol-package game-class))))
         (game-class-name (make-symbol (symbol-name game-class))))
     (ge.dist:register-distribution system-name "trivial-gamekit::main"

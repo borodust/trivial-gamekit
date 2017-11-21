@@ -27,6 +27,7 @@
            act
            draw
 
+           register-resource-package
            define-image
            define-sound
            initialize-resources
