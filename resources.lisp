@@ -13,9 +13,7 @@
 (define-constant +kit-resource-root+ "/_gamekit/"
   :test #'equal)
 
-(define-constant +font-name+ (format nil "~A~A/"
-                                     +kit-resource-root+
-                                     "sdf/NotoSans-Regular.ttf")
+(define-constant +font-name+ (format nil "~A~A/" +kit-resource-root+ "NotoMono-Regular")
   :test #'equal)
 
 (defvar *resources* nil)
@@ -41,12 +39,9 @@
   (merge-pathnames file *gamekit-assets-root*))
 
 
-(mount-container (kit-resource-path "sdf/")
-                 (kit-asset-path "font.brf")
-                 "/sdf/")
-
-
-(define-sdf-font +font-name+)
+(defresource :font +font-name+
+  :type :ttf
+  :path (kit-asset-path "NotoSans-Regular.ttf"))
 
 
 (defclass gamekit-resource-registry ()

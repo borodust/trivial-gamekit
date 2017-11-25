@@ -10,6 +10,9 @@
 (defvar *exit-latch* nil)
 
 
+(defvar *black* (vec4 0 0 0 1))
+
+
 (defclass gamekit-system (enableable generic-system)
   ((keymap :initform nil)
    (cursor-action :initform nil)
@@ -21,8 +24,8 @@
    (prepare-resources :initform t)
    (viewport-title :initarg :viewport-title :initform "Trivial Gamekit")
    (canvas :initform nil :reader canvas-of)
-   (action-queue :initform (mt:make-guarded-reference nil))
-   (text-renderer :initform nil))
+   (font :initform nil :reader font-of)
+   (action-queue :initform (mt:make-guarded-reference nil)))
   (:default-initargs :depends-on '(graphics-system audio-system)))
 
 
@@ -110,10 +113,10 @@
 
 
 (defmethod draw :around ((system gamekit-system))
-  (with-slots (canvas text-renderer) system
+  (with-slots (canvas font) system
+    (gl:clear :color-buffer :depth-buffer :stencil-buffer)
     (with-canvas (canvas)
-      (let ((*text-renderer* text-renderer))
-        (gl:clear :color-buffer :depth-buffer :stencil-buffer)
+      (with-font (font)
         (call-next-method)))))
 
 
@@ -181,8 +184,8 @@
 
 (defmethod initialize-system :after ((this gamekit-system))
   (with-slots (keymap viewport-title viewport-width viewport-height fullscreen-p
-                      text-renderer canvas resource-registry resource-path
-                      prepare-resources action-queue)
+                      canvas resource-registry resource-path
+                      prepare-resources action-queue font)
       this
     (configure-game this)
     (setf keymap (make-hash-table)
@@ -204,16 +207,15 @@
                (-> ((audio)) ()
                  (initialize-audio this))
                (-> ((graphics)) ()
-                 (let ((font (build-sdf-font +font-name+)))
-                   (gl:viewport 0 0 viewport-width viewport-height)
-                   (setf text-renderer (make-text-renderer viewport-width
-                                                           viewport-height
-                                                           font 32.0)
-                         canvas (make-canvas viewport-width
-                                             viewport-height
-                                             :antialiased t))
-                   (setf (swap-interval (host)) 1)
-                   (initialize-graphics this)))
+                 (gl:viewport 0 0 viewport-width viewport-height)
+                 (setf canvas (make-canvas viewport-width
+                                           viewport-height
+                                           :antialiased t))
+                 (with-canvas (canvas)
+                   (let ((font-face (register-font-face +font-name+ (load-resource +font-name+))))
+                     (setf font (ge.vg:make-font font-face 32))))
+                 (setf (swap-interval (host)) 1)
+                 (initialize-graphics this))
                (when prepare-resources (loading-flow resource-registry
                                                      #'%get-canvas
                                                      (list-all-resources)))
@@ -284,9 +286,8 @@
         (draw-rect image-origin image-width image-height :fill-paint image)))))
 
 
-(defun print-text (string x y &optional color)
-  (ge.vg:flush-canvas)
-  (draw-text *text-renderer* string :position (vec2 x y) :color color))
+(defun print-text (string x y &optional (color *black*))
+  (draw-text (vec2 x y) string :fill-color color))
 
 
 (defun start (classname &key (log-level :info) (opengl-version '(3 3)) blocking)
