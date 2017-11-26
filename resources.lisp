@@ -63,10 +63,17 @@
         (ge.vg:make-image-paint image :canvas (funcall canvas-provider)))))
 
 
+(defun %load-font (resource-name canvas-provider &key)
+  (>> (resource-flow resource-name)
+      (-> ((graphics)) ((font-face))
+        (ge.vg:register-font-face resource-name font-face (funcall canvas-provider)))))
+
+
 (defun %load-resource (resource-name type canvas-provider)
-  (switch (type :test #'eq)
+  (eswitch (type :test #'eq)
     (:image (%load-image resource-name canvas-provider))
-    (:audio (%load-sound resource-name))))
+    (:audio (%load-sound resource-name))
+    (:font (%load-font resource-name canvas-provider))))
 
 
 (defun loading-flow (loader canvas-provider resource-names)
@@ -160,4 +167,11 @@
   (once-only (name)
     `(progn
        (register-game-resource ,name ,path :audio)
+       (autoprepare ,name))))
+
+
+(defmacro define-font (name path)
+  (once-only (name)
+    `(progn
+       (register-game-resource ,name ,path :font :type :ttf)
        (autoprepare ,name))))

@@ -1,7 +1,7 @@
 (in-package :trivial-gamekit)
 
 
-(declaim (special *text-renderer*))
+(declaim (special *font*))
 
 
 (defvar +origin+ (vec2 0.0 0.0))
@@ -115,8 +115,8 @@
 (defmethod draw :around ((system gamekit-system))
   (with-slots (canvas font) system
     (gl:clear :color-buffer :depth-buffer :stencil-buffer)
-    (with-canvas (canvas)
-      (with-font (font)
+    (ge.vg:with-canvas (canvas)
+      (let ((*font* font))
         (call-next-method)))))
 
 
@@ -208,11 +208,11 @@
                  (initialize-audio this))
                (-> ((graphics)) ()
                  (gl:viewport 0 0 viewport-width viewport-height)
-                 (setf canvas (make-canvas viewport-width
-                                           viewport-height
-                                           :antialiased t))
-                 (with-canvas (canvas)
-                   (let ((font-face (register-font-face +font-name+ (load-resource +font-name+))))
+                 (setf canvas (ge.vg:make-canvas viewport-width
+                                                 viewport-height
+                                                 :antialiased t))
+                 (ge.vg:with-canvas (canvas)
+                   (let ((font-face (ge.vg:register-font-face +font-name+ (load-resource +font-name+))))
                      (setf font (ge.vg:make-font font-face 32))))
                  (setf (swap-interval (host)) 1)
                  (initialize-graphics this))
@@ -281,15 +281,28 @@
            (image-height (if height
                              height
                              (height-of image))))
-      (with-pushed-canvas ()
-        (translate-canvas (- (x position) (x image-origin)) (- (y position) (y image-origin)))
+      (ge.vg:with-pushed-canvas ()
+        (ge.vg:translate-canvas (- (x position) (x image-origin)) (- (y position) (y image-origin)))
         (draw-rect image-origin image-width image-height :fill-paint image)))))
 
 
+(defun make-font (font-id size)
+  (ge.vg:make-font (resource-by-id font-id) size))
+
+
 (defun print-text (string x y &optional (color *black*))
-  (draw-text (vec2 x y) string :fill-color color))
+  "Deprecated. Use #'draw-text instead"
+  (draw-text string (vec2 x y) :fill-color color))
 
 
+(defun draw-text (string origin &key (fill-color *black*) (font *font*))
+  (ge.vg:with-font (font)
+    (ge.vg:draw-text origin string :fill-color fill-color)))
+
+
+;;;
+;;; Startup routines
+;;;
 (defun start (classname &key (log-level :info) (opengl-version '(3 3)) blocking)
   (when *gamekit-instance-class*
     (error "Only one active system of type 'gamekit-system is allowed"))

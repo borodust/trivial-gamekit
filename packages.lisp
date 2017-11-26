@@ -4,8 +4,21 @@
 (defpackage :trivial-gamekit
   (:nicknames :gamekit)
   (:use :cl :cl-bodge.graphics :cl-bodge.audio :cl-bodge.engine
-        :cl-bodge.utils :cl-bodge.resources :cl-bodge.canvas
+        :cl-bodge.utils :cl-bodge.resources
         :cl-bodge.host :cl-bodge.assets :cl-bodge.text)
+  (:import-from :cl-bodge.canvas
+                draw-line
+                draw-curve
+                draw-rect
+                draw-circle
+                draw-ellipse
+                draw-arc
+                draw-polygon
+                draw-polyline
+                translate-canvas
+                rotate-canvas
+                scale-canvas
+                with-pushed-canvas)
   (:export start
            stop
 
@@ -30,11 +43,13 @@
            register-resource-package
            define-image
            define-sound
+           define-font
            initialize-resources
            import-image
            import-sound
            prepare-resources
            notice-resources
+           make-font
 
            initialize-host
            initialize-graphics
@@ -44,7 +59,7 @@
            bind-button
            bind-cursor
 
-           print-text
+           draw-text
            draw-line
            draw-curve
            draw-rect
@@ -60,6 +75,9 @@
            scale-canvas
            with-pushed-canvas
 
-           play
            play-sound
-           stop-sound))
+           stop-sound
+
+           ;; deprecated
+           print-text
+           play))
