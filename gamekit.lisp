@@ -47,6 +47,34 @@
 
 
 (defmacro defgame (name (&rest classes) &body ((&rest slots) &rest opts))
+  "Defines a game class that can be passed to [`#'start`](#gamekit-start) to run a game. `name` is
+the name of a class generated. `classes` are names of superclasses, `slots` - standard class
+slots and `opts` are class options. So, pretty much standard class definition except it does
+configure a class in certain ways specifically for `gamekit` use and allows passing additional
+options in `opts` apart from standard `:documentation`, `:default-initargs` and so others.
+
+Additional options that can be passed in `opts` are:
+
+* `:viewport-width` - width of the window and canvas
+* `:viewport-height` - height of the window and canvas
+* `:viewport-title` - title of the window
+* `:prepare-resources` - boolean value that indicates whether `gamekit` should load resources
+automatically on startup or if not, user prefers to load them dynamically on request. Defaults
+to `t`.
+
+Example:
+
+```common_lisp
+(gamekit:defgame notalone ()
+  ;; some game related state
+  ((world :initform (make-instance 'world))
+   (game-state))
+  ;; options
+  (:viewport-width 800)
+  (:viewport-height 600)
+  (:viewport-title \"NOTALONE\")
+  (:prepare-resources nil))
+```"
   (multiple-value-bind (std-opts extended) (split-opts opts)
     `(progn
        (defclass ,name (gamekit-system ,@classes)
@@ -80,8 +108,15 @@
   (call-next-method))
 
 
-(definline gamekit ()
-  (ge.ng:engine-system *gamekit-instance-class*))
+(defun gamekit ()
+  "Returns instance of a running game or `nil` if no game is started yet.
+
+Example:
+```common_lisp
+(gamekit:gamekit)
+```"
+  (when *gamekit-instance-class*
+    (ge.ng:engine-system *gamekit-instance-class*)))
 
 
 (defgeneric act (system)
@@ -304,6 +339,16 @@
 ;;; Startup routines
 ;;;
 (defun start (classname &key (log-level :info) (opengl-version '(3 3)) blocking)
+  "Bootsraps a game allocating a window and other system resources. Instantiates game object
+defined with [`defgame`](#gamekit-defgame) which can be obtained via
+[`#'gamekit`](#gamekit-gamekit). Cannot be called twice - [`#'stop`](#gamekit-stop) should be
+called first before running `start` again.
+
+Example:
+
+```common_lisp
+(gamekit:start 'notalone)
+```"
   (when *gamekit-instance-class*
     (error "Only one active system of type 'gamekit-system is allowed"))
   (let ((exit-latch (mt:make-latch)))
@@ -316,6 +361,12 @@
 
 
 (defun stop ()
+  "Stops currently running game releasing acquired resources.
+
+Example:
+```common_lisp
+(gamekit:stop)
+```"
   (shutdown)
   (let ((latch *exit-latch*))
     (setf *gamekit-instance-class* nil

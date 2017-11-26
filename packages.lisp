@@ -34,7 +34,6 @@
            z
            w
 
-           gamekit-system
            defgame
            gamekit
            act
@@ -44,9 +43,6 @@
            define-image
            define-sound
            define-font
-           initialize-resources
-           import-image
-           import-sound
            prepare-resources
            notice-resources
            make-font
@@ -79,5 +75,9 @@
            stop-sound
 
            ;; deprecated
+           initialize-resources
+           import-image
+           import-sound
+           gamekit-system
            print-text
            play))
