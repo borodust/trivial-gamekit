@@ -65,14 +65,14 @@ to `t`.
 Example:
 
 ```common_lisp
-(gamekit:defgame notalone ()
+(gamekit:defgame example ()
   ;; some game related state
   ((world :initform (make-instance 'world))
    (game-state))
   ;; options
   (:viewport-width 800)
   (:viewport-height 600)
-  (:viewport-title \"NOTALONE\")
+  (:viewport-title \"EXAMPLE\")
   (:prepare-resources nil))
 ```"
   (multiple-value-bind (std-opts extended) (split-opts opts)
@@ -120,11 +120,28 @@ Example:
 
 
 (defgeneric act (system)
-  (:method ((system gamekit-system)) (declare (ignore system))))
+  (:method ((system gamekit-system)) (declare (ignore system)))
+  (:documentation "Called every game loop iteration for user to add
+any per-frame behavior to the game. NOTE: all drawing operations should
+be performed in [`#'draw`](#gamekit-draw) method.
+
+Example:
+```common_lisp
+(defmethod gamekit:act ((this example))
+  (report-fps))
+```"))
 
 
 (defgeneric draw (system)
-  (:method ((system gamekit-system)) (declare (ignore system))))
+  (:method ((system gamekit-system)) (declare (ignore system)))
+  (:documentation "Called every game loop iteration for frame rendering.
+All drawing operations should be performed in this method.
+
+Example:
+```common_lisp
+(defmethod gamekit:draw ((this example))
+  (gamekit:draw-text \"Hello, Gamedev!\" (gamekit:vec2 10 10)))
+```"))
 
 
 (defgeneric initialize-resources (system)
@@ -347,7 +364,7 @@ called first before running `start` again.
 Example:
 
 ```common_lisp
-(gamekit:start 'notalone)
+(gamekit:start 'example)
 ```"
   (when *gamekit-instance-class*
     (error "Only one active system of type 'gamekit-system is allowed"))
