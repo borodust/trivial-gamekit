@@ -1,5 +1,5 @@
 *{{type}}* ***`{{name}}`*** `{{lambda-list}}`
-{: #gamekit-{{name}}}
+{: {{link}}}
 <div class="bodge-docstring" markdown="block">
 {{documentation}}
 </div>

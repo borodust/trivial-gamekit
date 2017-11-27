@@ -139,6 +139,106 @@ Example:
 (gamekit:div (gamekit:vec2 1 1) 2 (gamekit:vec2 0.5 0.5))
 ```")
 
+(docstring #'draw-text
+  "
+
+Example:
+```common_lisp
+```")
+
+(docstring #'draw-line
+  "
+
+Example:
+```common_lisp
+```")
+
+(docstring #'draw-curve
+  "
+
+Example:
+```common_lisp
+```")
+
+(docstring #'draw-rect
+  "
+
+Example:
+```common_lisp
+```")
+
+(docstring #'draw-circle
+  "
+
+Example:
+```common_lisp
+```")
+
+(docstring #'draw-ellipse
+  "
+
+Example:
+```common_lisp
+```")
+
+(docstring #'draw-arc
+  "
+
+Example:
+```common_lisp
+```")
+
+(docstring #'draw-polygon
+  "
+
+Example:
+```common_lisp
+```")
+
+(docstring #'draw-polyline
+  "
+
+Example:
+```common_lisp
+```")
+
+(docstring #'draw-image
+  "
+
+Example:
+```common_lisp
+```")
+
+(docstring #'translate-canvas
+  "
+
+Example:
+```common_lisp
+```")
+
+(docstring #'rotate-canvas
+  "
+
+Example:
+```common_lisp
+```")
+
+(docstring #'scale-canvas
+  "
+
+Example:
+```common_lisp
+```")
+
+(docstring #'with-pushed-canvas
+  "
+
+Example:
+```common_lisp
+```")
+
+
+
 
 (defclass kramdown-renderer () ())
 
@@ -154,11 +254,16 @@ Example:
               (mapcar #'symbol-name name))))
 
 
+(defun format-link (name)
+  (format nil "#gamekit-~(~{~A~^-~}~)" (alexandria:ensure-list name)))
+
+
 (defun format-documentation-entry (type name documentation &optional lambda-list)
   (let ((mustache:*escape-tokens* nil))
     (mustache:render* *template* (alexandria:plist-alist
                                   (append (list :type type
-                                                :name (format-name name))
+                                                :name (format-name name)
+                                                :link (format-link name))
                                           (when documentation
                                             (list :documentation documentation))
                                           (list :lambda-list
@@ -189,9 +294,9 @@ Example:
                 when doc
                 do (format output "~A~&~%" doc)
                 and
-                collect (format nil "* [~(~A~)](#gamekit-~(~{~A~^-~}~))"
+                collect (format nil "* [~(~A~)](~A)"
                                 (format-name symbol)
-                                (alexandria:ensure-list symbol))))))
+                                (format-link symbol))))))
     (append
      (%render-documentation "defining-a-game.md"
                             'defgame
