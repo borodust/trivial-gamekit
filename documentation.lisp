@@ -5,18 +5,160 @@
 (cl:in-package :trivial-gamekit.documentation)
 
 
+(defmacro docstring (object &body docstring)
+  `(setf (documentation ,object t)
+         ,@docstring))
+
+
+#|
+(docstring #'
+  "
+
+Example:
+```common_lisp
+```")
+|#
+
+(docstring #'vec2
+  "Makes a two-dimensional vector.
+
+Example:
+```common_lisp
+(gamekit:vec2 0 0)
+```")
+
+(docstring #'vec3
+  "Makes a three-dimensional vector.
+
+Example:
+```common_lisp
+(gamekit:vec3 1 1 2)
+```")
+
+(docstring #'vec4
+  "Makes a four-dimensional vector.
+
+Example:
+```common_lisp
+(gamekit:vec4 1 1 2 3)
+```")
+
+(docstring #'x
+  "Reads first element of a vector.
+
+Example:
+```common_lisp
+(gamekit:x (gamekit:vec2 1 1))
+```")
+
+(docstring #'(setf x)
+  "Stores first element of a vector.
+
+Example:
+```common_lisp
+(setf (gamekit:x (gamekit:vec2 1 1)) 0)
+```")
+
+(docstring #'y
+  "Reads second element of a vector.
+
+Example:
+```common_lisp
+(gamekit:y (gamekit:vec2 1 1))
+```")
+
+(docstring #'(setf y)
+  "Stores second element of a vector.
+
+Example:
+```common_lisp
+(setf (gamekit:y (gamekit:vec2 1 1)) 0)
+```")
+
+(docstring #'z
+  "Reads third element of a vector.
+
+Example:
+```common_lisp
+(gamekit:z (gamekit:vec4 1 1 2 3))
+```")
+
+(docstring #'(setf z)
+  "Stores third element of a vector.
+
+Example:
+```common_lisp
+(setf (gamekit:z (gamekit:vec4 1 1 2 3)) 0)
+```")
+
+(docstring #'w
+  "Reads fourth element of a vector.
+
+Example:
+```common_lisp
+(gamekit:w (gamekit:vec4 1 1 2 3))
+```")
+
+(docstring #'(setf w)
+  "Stores fourth element of a vector.
+
+Example:
+```common_lisp
+(setf (gamekit:w (gamekit:vec4 1 1 2 3)) 0)
+```")
+
+(docstring #'mult
+  "Element-wise multiplication. Accepts both vectors and scalars.
+
+Example:
+```common_lisp
+(gamekit:mult 2 (gamekit:vec2 1 1) 0.5)
+```")
+
+(docstring #'add
+  "Element-wise addition. Accepts both vectors and scalars.
+
+Example:
+```common_lisp
+(gamekit:add 1 (gamekit:vec2 1 1) -1)
+```")
+
+(docstring #'subt
+  "Element-wise subtraction. Accepts both vectors and scalars.
+
+Example:
+```common_lisp
+(gamekit:subt 1 (gamekit:vec2 1 1) (gamekit:vec2 -1 -1))
+```")
+
+(docstring #'div
+  "Element-wise division. Accepts both vectors and scalars.
+
+Example:
+```common_lisp
+(gamekit:div (gamekit:vec2 1 1) 2 (gamekit:vec2 0.5 0.5))
+```")
+
+
 (defclass kramdown-renderer () ())
 
 
 (defparameter *template* (alexandria:read-file-into-string
                           (asdf:system-relative-pathname :trivial-gamekit/documentation
-                                                         "documentation-entry.template")))
+                                                         "doc-entry.template")))
 
-(defun format-documentation-entry (type symbol documentation &optional lambda-list)
+(defun format-name (name)
+  (if (symbolp name)
+      (string-downcase (symbol-name name))
+      (format nil "~(~A~)"
+              (mapcar #'symbol-name name))))
+
+
+(defun format-documentation-entry (type name documentation &optional lambda-list)
   (let ((mustache:*escape-tokens* nil))
     (mustache:render* *template* (alexandria:plist-alist
                                   (append (list :type type
-                                                :name (string-downcase (symbol-name symbol)))
+                                                :name (format-name name))
                                           (when documentation
                                             (list :documentation documentation))
                                           (list :lambda-list
@@ -47,7 +189,9 @@
                 when doc
                 do (format output "~A~&~%" doc)
                 and
-                collect (format nil "* [~(~A~)](#gamekit-~(~:*~A~))" (symbol-name symbol))))))
+                collect (format nil "* [~(~A~)](#gamekit-~(~{~A~^-~}~))"
+                                (format-name symbol)
+                                (alexandria:ensure-list symbol))))))
     (append
      (%render-documentation "defining-a-game.md"
                             'defgame

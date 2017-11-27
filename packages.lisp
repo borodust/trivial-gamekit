@@ -29,6 +29,10 @@
            add
            subt
            div
+           normalize
+           cross-product
+           dot-product
+           lerp
            x
            y
            z
