@@ -219,10 +219,41 @@ Example:
 (defgeneric notice-resources (game &rest resource-names)
   (:method ((this gamekit-system) &rest resource-names)
     (declare (ignore this))
-    (log:trace "Resources loaded: ~A" resource-names)))
+    (log:trace "Resources loaded: ~A" resource-names))
+  (:documentation "Called when resource names earlier requested with
+[`#'prepare-resources`](#gamekit-prepare-resources) which indicates those resources are ready to
+be used.
+
+Override this generic function to know when resources are ready.
+
+Example:
+```common_lisp
+(defmethod gamekit:notice-resources ((this example) &rest resource-names)
+  (declare (ignore resource-names))
+  (gamekit:play-sound 'example-package::blop)
+  (show-start-screen))
+```"))
 
 
 (defun prepare-resources (game &rest resource-names)
+  "Loads and prepares resources for later usage asynchronously. First argument is an instance of
+a game that can be obtained with [`#'gamekit`](#gamekit-gamekit). `resource-names` should be
+symbols used previously registered with `define-*` macros.
+
+This function returns immediately. When resources are ready for use
+[`#'notice-resources`](#gamekit-notice-resources) will be called with names that were passed to
+this function.
+
+`gamekit` by default will try to load and prepare all registered resources on startup which
+might take a substantial time, but then you don't need to call #'prepare-resources yourself. If
+you prefer load resources on demand and have a faster startup time, pass nil
+to :prepare-resources option of a [`defgame`](#gamekit-defgame) macro which will disable startup
+resource autoloading.
+
+Example:
+```common_lisp
+(gamekit:prepare-resources (gamekit:gamekit) 'example-package::noto-sans 'example-package::blop 'example-package::logo)
+```"
   (log:trace "Preparing resources: ~A" resource-names)
   (with-slots (canvas resource-registry) game
     (flet ((get-canvas ()
@@ -339,6 +370,14 @@ Example:
 
 
 (defun make-font (font-id size)
+  "Makes a font instance that can be later passed to [`#'draw-text`](#gamekit-draw-text) to
+customize text looks. `font-id` must be a valid resource name previously registered with
+[`define-font`](#gamekit-define-font). Second argument is a font size in pixels.
+
+Example:
+```common_lisp
+(gamekit:make-font 'example-package::noto-sans 32)
+```"
   (ge.vg:make-font (resource-by-id font-id) size))
 
 
