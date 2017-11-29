@@ -252,7 +252,10 @@ resource autoloading.
 
 Example:
 ```common_lisp
-(gamekit:prepare-resources (gamekit:gamekit) 'example-package::noto-sans 'example-package::blop 'example-package::logo)
+(gamekit:prepare-resources (gamekit:gamekit)
+                           'example-package::noto-sans
+                           'example-package::blop
+                           'example-package::logo)
 ```"
   (log:trace "Preparing resources: ~A" resource-names)
   (with-slots (canvas resource-registry) game

@@ -118,7 +118,8 @@ resources can be found.
 
 Example:
 ```common_lisp
-(gamekit:register-resource-package :example-package \"/home/gamdev/example-game/assets/\")
+(gamekit:register-resource-package :example-package
+                                   \"/home/gamdev/example-game/assets/\")
 ```"
   (setf (assoc-value *resouce-packages* (find-package package-name)) path))
 
