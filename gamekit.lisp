@@ -235,9 +235,8 @@ Example:
 ```"))
 
 
-(defun prepare-resources (game &rest resource-names)
-  "Loads and prepares resources for later usage asynchronously. First argument is an instance of
-a game that can be obtained with [`#'gamekit`](#gamekit-gamekit). `resource-names` should be
+(defun prepare-resources (&rest resource-names)
+  "Loads and prepares resources for later usage asynchronously. `resource-names` should be
 symbols used previously registered with `define-*` macros.
 
 This function returns immediately. When resources are ready for use
@@ -252,20 +251,20 @@ resource autoloading.
 
 Example:
 ```common_lisp
-(gamekit:prepare-resources (gamekit:gamekit)
-                           'example-package::noto-sans
+(gamekit:prepare-resources 'example-package::noto-sans
                            'example-package::blop
                            'example-package::logo)
 ```"
   (log:trace "Preparing resources: ~A" resource-names)
-  (with-slots (canvas resource-registry) game
-    (flet ((get-canvas ()
-             canvas)
-           (notify-game ()
-             (apply #'notice-resources game resource-names)))
-      (run (>> (loading-flow resource-registry #'get-canvas resource-names)
-               (instantly ()
-                 (push-action game #'notify-game)))))))
+  (let ((game (gamekit)))
+    (with-slots (canvas resource-registry) game
+      (flet ((get-canvas ()
+               canvas)
+             (notify-game ()
+               (apply #'notice-resources game resource-names)))
+        (run (>> (loading-flow resource-registry #'get-canvas resource-names)
+                 (instantly ()
+                   (push-action game #'notify-game))))))))
 
 
 (defmethod initialize-system :after ((this gamekit-system))

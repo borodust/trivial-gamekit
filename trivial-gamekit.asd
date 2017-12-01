@@ -34,7 +34,7 @@
 
 (defsystem trivial-gamekit/documentation
   :description "Documentation for trivial-gamekit"
-  :version "0.0.1"
+  :version "1.0.0"
   :author "Pavel Korolev"
   :mailto "dev@borodust.org"
   :license "MIT"

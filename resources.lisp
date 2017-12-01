@@ -150,7 +150,7 @@ Example:
 (defun autoprepare (resource-id)
   (when *gamekit-instance-class*
     (%mount-resources resource-id)
-    (prepare-resources (engine-system *gamekit-instance-class*) resource-id)))
+    (prepare-resources resource-id)))
 
 
 (defun register-game-resource (id path &rest handler-args)
