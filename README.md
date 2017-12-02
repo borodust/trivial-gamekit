@@ -26,10 +26,10 @@ Library for getting into gamedev with Common Lisp! Very simple interface to grap
 Copy-paste these into your Common Lisp REPL after loading `trivial-gamekit`:
 
 ```lisp
-(defclass example (gamekit:gamekit-system) ())
+(gamekit:defgame example () ())
 
 (defmethod gamekit:draw ((this example))
-  (gamekit:print-text "Hello, Gamedev!" 240.0 240.0))
+  (gamekit:draw-text "Hello, Gamedev!" (gamekit:vec2 240.0 240.0)))
 
 (gamekit:start 'example)
 ```
