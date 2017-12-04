@@ -219,7 +219,7 @@ Example:
 (defgeneric notice-resources (game &rest resource-names)
   (:method ((this gamekit-system) &rest resource-names)
     (declare (ignore this))
-    (log:trace "Resources loaded: ~A" resource-names))
+    (log:info "Resources loaded: ~A" resource-names))
   (:documentation "Called when resource names earlier requested with
 [`#'prepare-resources`](#gamekit-prepare-resources) which indicates those resources are ready to
 be used.
