@@ -161,7 +161,18 @@ Example:
 
 
 (defgeneric post-initialize (system)
-  (:method ((system gamekit-system)) (declare (ignore system))))
+  (:method ((system gamekit-system)) (declare (ignore system)))
+  (:documentation "This function is called after game instance is fully initialized, right
+before main game loop starts its execution. Put initialization code for your application into
+method of this function. For example, it would be logical to bind input via
+[`#'bind-cursor`](#gamekit-bind-cursor) or [`#'bind-button`](#gamekit-bind-button) here.
+
+Example:
+```common_lisp
+(defmethod gamekit:post-initialize ((this example))
+  (init-game)
+  (bind-input))
+```"))
 
 
 (defmethod draw :around ((system gamekit-system))

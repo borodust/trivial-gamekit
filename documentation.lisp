@@ -383,6 +383,7 @@ Example:
                             'start
                             'stop
                             'gamekit
+                            'post-initialize
                             'act
                             'draw)
      (%render-documentation "math.md"
