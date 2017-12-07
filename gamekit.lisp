@@ -300,7 +300,7 @@ Example:
                    (setf (viewport-title) viewport-title
                          (fullscreen-viewport-p) fullscreen-p
                          (viewport-size) (vec2 viewport-width viewport-height)
-                         pixel-ratio (/ (x (framebuffer-size)) (/ (x (viewport-size)))))
+                         pixel-ratio (/ (x (framebuffer-size)) (x (viewport-size))))
                    (initialize-host this))
                  (-> ((audio)) ()
                    (initialize-audio this))
