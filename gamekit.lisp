@@ -20,6 +20,7 @@
    (resource-registry)
    (viewport-width :initarg :viewport-width :initform 640)
    (viewport-height :initarg :viewport-height :initform 480)
+   (framebuffer-size :initform (vec2 640 480) :accessor %framebuffer-size-of)
    (fullscreen-p :initarg :fullscreen-p :initform nil)
    (prepare-resources :initform t)
    (viewport-title :initarg :viewport-title :initform "Trivial Gamekit")
@@ -176,7 +177,8 @@ Example:
 
 
 (defmethod draw :around ((system gamekit-system))
-  (with-slots (canvas font) system
+  (with-slots (canvas font framebuffer-size) system
+    (gl:viewport 0 0 (x framebuffer-size) (y framebuffer-size))
     (gl:clear :color-buffer :depth-buffer :stencil-buffer)
     (ge.vg:with-canvas (canvas)
       (let ((*font* font))
@@ -278,63 +280,73 @@ Example:
                    (push-action game #'notify-game))))))))
 
 
+(define-event-handler on-framebuffer-change ((ev framebuffer-size-change-event) width height)
+  (when-let ((gamekit (gamekit)))
+    (flet ((update-framebuffer ()
+             (setf (%framebuffer-size-of gamekit) (vec2 width height))))
+      (push-action gamekit #'update-framebuffer))))
+
+
 (defmethod initialize-system :after ((this gamekit-system))
   (with-slots (keymap viewport-title viewport-width viewport-height fullscreen-p
-                      canvas resource-registry resource-path
+                      canvas resource-registry resource-path framebuffer-size
                       prepare-resources action-queue font)
       this
-    (let (pixel-ratio)
-      (configure-game this)
-      (setf keymap (make-hash-table)
-            resource-registry (make-instance 'gamekit-resource-registry))
-      (initialize-resources this)
-      (unless (executablep)
-        (when resource-path
-          (register-resource-package :keyword resource-path)
-          (%mount-packages :keyword))
-        (when prepare-resources
-          (apply #'%mount-resources (list-all-resources))))
-      (flet ((%get-canvas ()
-               canvas))
-        (run (>> (-> ((host)) ()
+    (configure-game this)
+    (setf keymap (make-hash-table)
+          resource-registry (make-instance 'gamekit-resource-registry))
+    (initialize-resources this)
+    (unless (executablep)
+      (when resource-path
+        (register-resource-package :keyword resource-path)
+        (%mount-packages :keyword))
+      (when prepare-resources
+        (apply #'%mount-resources (list-all-resources))))
+    (flet ((%get-canvas ()
+             canvas))
+      (run (>> (-> ((host)) ()
+                 (let* ((vp-size (viewport-size))
+                        (fb-size (framebuffer-size))
+                        (pixel-ratio (/ (x fb-size) (x vp-size))))
                    (setf (viewport-title) viewport-title
                          (fullscreen-viewport-p) fullscreen-p
                          (viewport-size) (vec2 viewport-width viewport-height)
-                         pixel-ratio (/ (x (framebuffer-size)) (x (viewport-size))))
-                   (initialize-host this))
-                 (-> ((audio)) ()
-                   (initialize-audio this))
-                 (-> ((graphics)) ()
-                   (gl:viewport 0 0 viewport-width viewport-height)
-                   (setf canvas (ge.vg:make-canvas viewport-width
-                                                   viewport-height
-                                                   :pixel-ratio pixel-ratio
-                                                   :antialiased t))
-                   (ge.vg:with-canvas (canvas)
-                     (let ((font-face (ge.vg:register-font-face +font-name+
-                                                                (load-resource +font-name+))))
-                       (setf font (ge.vg:make-font font-face 32))))
-                   (setf (swap-interval (host)) 1)
-                   (initialize-graphics this))
-                 (when prepare-resources (loading-flow resource-registry
-                                                       #'%get-canvas
-                                                       (list-all-resources)))
-                 (concurrently ()
-                   (post-initialize this)
-                   (let (looped-flow)
-                     (setf looped-flow (>> (instantly ()
-                                             (mt:with-guarded-reference (action-queue)
-                                               (loop for action in action-queue
-                                                  do (funcall action)
-                                                  finally (setf action-queue nil)))
-                                             (act this))
-                                           (-> ((graphics)) ()
-                                             (draw this)
-                                             (swap-buffers (host)))
-                                           (instantly ()
-                                             (when (enabledp this)
-                                               (run looped-flow)))))
-                     (run looped-flow)))))))))
+                         framebuffer-size (vec2 (* viewport-width pixel-ratio)
+                                                (* viewport-height pixel-ratio)))
+                   (initialize-host this)
+                   pixel-ratio))
+               (-> ((graphics)) (pixel-ratio)
+                 (setf canvas (ge.vg:make-canvas viewport-width
+                                                 viewport-height
+                                                 :pixel-ratio pixel-ratio
+                                                 :antialiased t))
+                 (ge.vg:with-canvas (canvas)
+                   (let ((font-face (ge.vg:register-font-face +font-name+
+                                                              (load-resource +font-name+))))
+                     (setf font (ge.vg:make-font font-face 32))))
+                 (setf (swap-interval (host)) 1)
+                 (initialize-graphics this))
+               (-> ((audio)) ()
+                 (initialize-audio this))
+               (when prepare-resources (loading-flow resource-registry
+                                                     #'%get-canvas
+                                                     (list-all-resources)))
+               (concurrently ()
+                 (post-initialize this)
+                 (let (looped-flow)
+                   (setf looped-flow (>> (instantly ()
+                                           (mt:with-guarded-reference (action-queue)
+                                             (loop for action in action-queue
+                                                do (funcall action)
+                                                finally (setf action-queue nil)))
+                                           (act this))
+                                         (-> ((graphics)) ()
+                                           (draw this)
+                                           (swap-buffers (host)))
+                                         (instantly ()
+                                           (when (enabledp this)
+                                             (run looped-flow)))))
+                   (run looped-flow))))))))
 
 
 (defun resource-by-id (id)
