@@ -16,6 +16,8 @@
 (defclass gamekit-system (enableable generic-system)
   ((keymap :initform nil)
    (cursor-action :initform nil)
+   (cursor-position :initform (vec2 0 0))
+   (cursor-changed-p :initform nil)
    (resource-path :initarg :resource-path :initform nil)
    (resource-registry)
    (viewport-width :initarg :viewport-width :initform 640)
@@ -26,7 +28,7 @@
    (viewport-title :initarg :viewport-title :initform "Trivial Gamekit")
    (canvas :initform nil :reader canvas-of)
    (font :initform nil :reader font-of)
-   (action-queue :initform (mt:make-guarded-reference nil)))
+   (action-queue :initform (make-task-queue)))
   (:default-initargs :depends-on '(graphics-system audio-system)))
 
 
@@ -205,9 +207,9 @@ Example:
 
 
 (define-event-handler on-keyboard-event ((ev keyboard-event) key state)
-  (with-slots (keymap) (gamekit)
+  (with-slots (keymap action-queue) (gamekit)
     (when-let ((action (getf (gethash key keymap) state)))
-      (funcall action))))
+      (push-task action action-queue ))))
 
 
 (defun bodge-mouse-button->gamekit (bodge-button)
@@ -225,9 +227,11 @@ Example:
 
 
 (define-event-handler on-cursor-event ((ev cursor-event) x y)
-  (with-slots (cursor-action) (gamekit)
-    (when cursor-action
-      (funcall cursor-action x y))))
+  (with-slots (cursor-position cursor-changed-p) (gamekit)
+    (unless cursor-changed-p
+      (setf cursor-changed-p t))
+    (setf (x cursor-position) x
+          (y cursor-position) y)))
 
 
 (defun make-package-resource-table (resource-paths)
@@ -238,8 +242,7 @@ Example:
 
 (defun push-action (game action)
   (with-slots (action-queue) game
-    (mt:with-guarded-reference (action-queue)
-      (push action action-queue))))
+    (push-task action action-queue)))
 
 
 (defgeneric notice-resources (game &rest resource-names)
@@ -303,7 +306,8 @@ Example:
 (defmethod initialize-system :after ((this gamekit-system))
   (with-slots (keymap viewport-title viewport-width viewport-height fullscreen-p
                       canvas resource-registry resource-path framebuffer-size
-                      prepare-resources action-queue font)
+                      prepare-resources action-queue font
+                      cursor-position cursor-changed-p cursor-action)
       this
     (configure-game this)
     (setf keymap (make-hash-table)
@@ -348,10 +352,11 @@ Example:
                  (post-initialize this)
                  (let (looped-flow)
                    (setf looped-flow (>> (instantly ()
-                                           (mt:with-guarded-reference (action-queue)
-                                             (loop for action in action-queue
-                                                do (funcall action)
-                                                finally (setf action-queue nil)))
+                                           (when cursor-changed-p
+                                             (funcall cursor-action
+                                                      (x cursor-position) (y cursor-position))
+                                             (setf cursor-changed-p nil))
+                                           (drain action-queue)
                                            (act this))
                                          (-> ((graphics)) ()
                                            (draw this)
