@@ -55,6 +55,7 @@
            initialize-graphics
            initialize-audio
            post-initialize
+           pre-destroy
 
            bind-button
            bind-cursor

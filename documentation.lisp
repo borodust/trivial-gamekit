@@ -384,6 +384,7 @@ Example:
                             'stop
                             'gamekit
                             'post-initialize
+                            'pre-destroy
                             'act
                             'draw)
      (%render-documentation "math.md"

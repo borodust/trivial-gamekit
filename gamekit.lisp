@@ -176,6 +176,19 @@ Example:
 ```"))
 
 
+(defgeneric pre-destroy (system)
+  (:method ((system gamekit-system)) (declare (ignore system)))
+  (:documentation "This function is called just before shutting down a game instance for you to
+free all acquired resources and do any other clean up procedures.
+
+Example:
+```common_lisp
+(defmethod gamekit:pre-destroy ((this example))
+  (release-foreign-memory)
+  (stop-threads))
+```"))
+
+
 (defmethod draw :around ((system gamekit-system))
   (with-slots (canvas font framebuffer-size) system
     (gl:viewport 0 0 (x framebuffer-size) (y framebuffer-size))
@@ -344,8 +357,9 @@ Example:
                                            (draw this)
                                            (swap-buffers (host)))
                                          (instantly ()
-                                           (when (enabledp this)
-                                             (run looped-flow)))))
+                                           (if (enabledp this)
+                                               (run looped-flow)
+                                               (pre-destroy this)))))
                    (run looped-flow))))))))
 
 
