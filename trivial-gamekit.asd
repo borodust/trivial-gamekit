@@ -1,27 +1,19 @@
-(cl:in-package :cl-user)
-
-(defpackage :trivial-gamekit.def
-  (:use :cl :asdf))
-
-(in-package :trivial-gamekit.def)
-
-
-(defsystem trivial-gamekit
+(asdf:defsystem trivial-gamekit
   :description "Simple facade for cl-bodge functionality"
   :version "1.0.0"
   :author "Pavel Korolev"
   :mailto "dev@borodust.org"
   :license "MIT"
   :depends-on (log4cl cl-bodge/graphics cl-bodge/audio cl-bodge/host
-                      cl-bodge/resources cl-bodge/canvas cl-bodge/assets
-                      cl-bodge/text uiop cl-muth cl-fad cl-muth)
+                      cl-bodge/resources cl-bodge/canvas
+                      uiop cl-muth cl-fad cl-muth)
   :serial t
   :components ((:file "packages")
                (:file "resources")
                (:file "gamekit")))
 
 
-(defsystem trivial-gamekit/distribution
+(asdf:defsystem trivial-gamekit/distribution
   :description "Distribution facilities for trivial-gamekit"
   :version "1.0.0"
   :author "Pavel Korolev"
@@ -32,7 +24,7 @@
   :components ((:file "distribution")))
 
 
-(defsystem trivial-gamekit/documentation
+(asdf:defsystem trivial-gamekit/documentation
   :description "Documentation for trivial-gamekit"
   :version "1.0.0"
   :author "Pavel Korolev"

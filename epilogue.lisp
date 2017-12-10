@@ -15,11 +15,11 @@
 
 
 (defun mount-containers ()
-  (ge.as:mount-container "/_gamekit/"
-                         (ge.ng:merge-working-pathname "assets/gamekit.brf")
-                         "/_gamekit/")
-  (ge.as:mount-container "/_asset/"
-                         (ge.ng:merge-working-pathname "assets/assets.brf")
-                         "/_asset/"))
+  (ge.rsc:mount-container "/_gamekit/"
+                          (ge.ng:merge-working-pathname "assets/gamekit.brf")
+                          "/_gamekit/")
+  (ge.rsc:mount-container "/_asset/"
+                          (ge.ng:merge-working-pathname "assets/assets.brf")
+                          "/_asset/"))
 
 (pushnew #'mount-containers ge.ng:*engine-startup-hooks*)
