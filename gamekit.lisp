@@ -350,8 +350,7 @@ Example:
                                                      (list-all-resources)))
                (concurrently ()
                  (post-initialize this)
-                 (let (looped-flow)
-                   (setf looped-flow (>> (instantly ()
+                 (run (>> (loop-flow (>> (instantly ()
                                            (when cursor-changed-p
                                              (funcall cursor-action
                                                       (x cursor-position) (y cursor-position))
@@ -360,12 +359,10 @@ Example:
                                            (act this))
                                          (-> ((graphics)) ()
                                            (draw this)
-                                           (swap-buffers (host)))
-                                         (instantly ()
-                                           (if (enabledp this)
-                                               (run looped-flow)
-                                               (pre-destroy this)))))
-                   (run looped-flow))))))))
+                                           (swap-buffers (host))))
+                             (lambda () (enabledp this)))
+                          (instantly ()
+                            (pre-destroy this))))))))))
 
 
 (defun resource-by-id (id)
