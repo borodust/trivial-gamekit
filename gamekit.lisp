@@ -368,28 +368,28 @@ Example:
          (lambda () (enabledp this))))))
 
 (defmethod initialize-system :after ((this gamekit-system))
-  (with-slots (keymap viewport-title viewport-width viewport-height fullscreen-p
-                      canvas resource-registry resource-path framebuffer-size
-                      prepare-resources action-queue font
-                      cursor-position cursor-changed-p cursor-action)
-      this
+  (with-slots (keymap resource-registry) this
     (configure-game this)
     (setf keymap (make-hash-table)
           resource-registry (make-instance 'gamekit-resource-registry))
     (initialize-resources this)
-    (%mount-for-executable this)
-    (run (>> (-> ((host)) ()
-               (%initialize-host this))
-             (-> ((graphics)) (pixel-ratio)
-               (%initialize-graphics this pixel-ratio))
-             (-> ((audio)) ()
-               (initialize-audio this))
-             (%prepare-resources this)
-             (instantly ()
-               (post-initialize this))
-             (%game-loop this)
-             (instantly ()
-               (pre-destroy this))))))
+    (%mount-for-executable this)))
+
+(defmethod enabling-flow ((this gamekit-system))
+  (>> (call-next-method)
+      (-> ((host)) ()
+        (%initialize-host this))
+      (-> ((graphics)) (pixel-ratio)
+        (%initialize-graphics this pixel-ratio))
+      (-> ((audio)) ()
+        (initialize-audio this))
+      (->> ()
+        (%prepare-resources this))
+      (instantly ()
+        (post-initialize this)
+        (run (>> (%game-loop this)
+                 (instantly ()
+                   (pre-destroy this)))))))
 
 
 (defun resource-by-id (id)
@@ -554,10 +554,11 @@ Example:
 
 Example:
 ```common_lisp
-(gamekit:stop)
+\(gamekit:stop\)
 ```"
-  (shutdown)
-  (setf *gamekit-instance-class* nil))
+  (unwind-protect
+       (shutdown)
+    (setf *gamekit-instance-class* nil)))
 
 
 (define-event-handler on-exit ((ev viewport-hiding-event))
