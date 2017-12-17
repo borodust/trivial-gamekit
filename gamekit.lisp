@@ -203,10 +203,16 @@ Example:
       (call-next-method))))
 
 
+(defmacro when-gamekit ((gamekit-var) &body body)
+  `(when-let ((,gamekit-var (gamekit)))
+     ,@body))
+
+
 (define-event-handler on-keyboard-event ((ev keyboard-event) key state)
-  (with-slots (keymap action-queue) (gamekit)
-    (when-let ((action (getf (gethash key keymap) state)))
-      (push-task action action-queue ))))
+  (when-gamekit (gamekit)
+    (with-slots (keymap action-queue) gamekit
+      (when-let ((action (getf (gethash key keymap) state)))
+        (push-task action action-queue )))))
 
 
 (defun bodge-mouse-button->gamekit (bodge-button)
@@ -218,17 +224,19 @@ Example:
 
 
 (define-event-handler on-mouse-event ((ev mouse-event) button state)
-  (with-slots (keymap) (gamekit)
-    (when-let ((action (getf (gethash (bodge-mouse-button->gamekit button) keymap) state)))
-      (funcall action))))
+  (when-gamekit (gamekit)
+    (with-slots (keymap) gamekit
+      (when-let ((action (getf (gethash (bodge-mouse-button->gamekit button) keymap) state)))
+        (funcall action)))))
 
 
 (define-event-handler on-cursor-event ((ev cursor-event) x y)
-  (with-slots (cursor-position cursor-changed-p) (gamekit)
-    (unless cursor-changed-p
-      (setf cursor-changed-p t))
-    (setf (x cursor-position) x
-          (y cursor-position) y)))
+  (when-gamekit (gamekit)
+    (with-slots (cursor-position cursor-changed-p) gamekit
+      (unless cursor-changed-p
+        (setf cursor-changed-p t))
+      (setf (x cursor-position) x
+            (y cursor-position) y))))
 
 
 (defun make-package-resource-table (resource-paths)
