@@ -7,9 +7,6 @@
 (defvar +origin+ (vec2 0.0 0.0))
 
 
-(defvar *exit-latch* nil)
-
-
 (defvar *black* (vec4 0 0 0 1))
 
 
@@ -534,17 +531,14 @@ called first before running `start` again.
 Example:
 
 ```common_lisp
-(gamekit:start 'example)
+\(gamekit:start 'example\)
 ```"
   (when *gamekit-instance-class*
     (error "Only one active system of type 'gamekit-system is allowed"))
-  (let ((exit-latch (mt:make-latch)))
-    (setf *gamekit-instance-class* classname
-          *exit-latch* exit-latch)
-    (startup `(:engine (:systems (,classname) :log-level ,log-level)
-                       :host (:opengl-version ,opengl-version)))
-    (when blocking
-      (mt:wait-for-latch exit-latch))))
+  (setf *gamekit-instance-class* classname)
+  (startup `(:engine (:systems (,classname) :log-level ,log-level)
+             :host (:opengl-version ,opengl-version))
+           :blocking blocking))
 
 
 (defun stop ()
@@ -555,10 +549,7 @@ Example:
 (gamekit:stop)
 ```"
   (shutdown)
-  (let ((latch *exit-latch*))
-    (setf *gamekit-instance-class* nil
-          *exit-latch* nil)
-    (mt:open-latch latch)))
+  (setf *gamekit-instance-class* nil))
 
 
 (define-event-handler on-exit ((ev viewport-hiding-event))
