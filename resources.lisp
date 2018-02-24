@@ -1,4 +1,4 @@
-(in-package :trivial-gamekit)
+(cl:in-package :trivial-gamekit)
 
 
 (declaim (special *resource-registry*))
