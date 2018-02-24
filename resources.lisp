@@ -59,13 +59,13 @@
 
 (defun %load-image (resource-name canvas-provider &key)
   (>> (resource-flow resource-name)
-      (-> ((graphics)) ((image))
+      (for-graphics ((image))
         (ge.vg:make-image-paint image :canvas (funcall canvas-provider)))))
 
 
 (defun %load-font (resource-name canvas-provider &key)
   (>> (resource-flow resource-name)
-      (-> ((graphics)) ((font-face))
+      (for-graphics ((font-face))
         (ge.vg:register-font-face resource-name font-face (funcall canvas-provider)))))
 
 
