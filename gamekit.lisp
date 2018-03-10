@@ -339,8 +339,8 @@ Example:
     (ge.vg:with-canvas (canvas)
       (let ((font-face (ge.vg:register-font-face +font-name+
                                                  (load-resource +font-name+))))
-        (setf font (ge.vg:make-font font-face 32))))
-    (setf (swap-interval (host)) 1)
+        (setf font (ge.vg:make-font font-face :size 32))))
+    (setf (swap-interval) 1)
     (initialize-graphics this)))
 
 (defun %prepare-resources (this)
@@ -362,7 +362,7 @@ Example:
                (act this))
              (%draw ()
                (draw this)
-               (swap-buffers (host))))
+               (swap-buffers)))
       (loop-flow (>> (instantly () (%act))
                      (for-graphics () (%draw)))
          (lambda () (enabledp this))))))
@@ -513,7 +513,7 @@ Example:
 ```common_lisp
 (gamekit:make-font 'example-package::noto-sans 32)
 ```"
-  (ge.vg:make-font (resource-by-id font-id) size))
+  (ge.vg:make-font (resource-by-id font-id) :size size))
 
 
 (defun print-text (string x y &optional (color *black*))
