@@ -225,9 +225,9 @@ Example:
 
 (define-event-handler on-mouse-event ((ev mouse-event) button state)
   (when-gamekit (gamekit)
-    (with-slots (keymap) gamekit
+    (with-slots (keymap action-queue) gamekit
       (when-let ((action (getf (gethash (bodge-mouse-button->gamekit button) keymap) state)))
-        (funcall action)))))
+        (push-task action action-queue)))))
 
 
 (define-event-handler on-cursor-event ((ev cursor-event) x y)
