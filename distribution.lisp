@@ -18,9 +18,12 @@ default) to build a distributable package on various platforms. If those executa
 your system's `PATH`, you would need to provide absolute paths to them via `:zip` and `:lisp`
 key arguments accordingly.
 
+You can load this function into an image via `:trivial-gamekit/distribution` system.
+
 Example:
 ```common_lisp
-(gamekit.distribution:deliver :example-asdf-system 'example-package::example
+\(ql:quickload :trivial-gamekit/distribution)
+\(gamekit.distribution:deliver :example-asdf-system 'example-package::example
                               :build-directory \"/tmp/example-game/\"
                               :zip \"/usr/bin/zip\"
                               :lisp \"/usr/bin/sbcl\")
