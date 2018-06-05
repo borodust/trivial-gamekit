@@ -25,6 +25,7 @@
    (viewport-title :initarg :viewport-title :initform "Trivial Gamekit")
    (canvas :initform nil :reader canvas-of)
    (font :initform nil :reader font-of)
+   (antialiased :initform (property '(:gamekit :antialiased) t))
    (action-queue :initform (make-task-queue)))
   (:default-initargs :depends-on '(graphics-system audio-system)))
 
@@ -331,11 +332,11 @@ Example:
       pixel-ratio)))
 
 (defun %initialize-graphics (this pixel-ratio)
-  (with-slots (viewport-width viewport-height canvas font) this
+  (with-slots (viewport-width viewport-height canvas font antialiased) this
     (setf canvas (ge.vg:make-canvas viewport-width
                                     viewport-height
                                     :pixel-ratio pixel-ratio
-                                    :antialiased t))
+                                    :antialiased antialiased))
     (ge.vg:with-canvas (canvas)
       (let ((font-face (ge.vg:register-font-face +font-name+
                                                  (load-resource +font-name+))))
@@ -529,7 +530,7 @@ Example:
 ;;;
 ;;; Startup routines
 ;;;
-(defun start (classname &key (log-level :info) (opengl-version '(3 3)) blocking)
+(defun start (classname &key (log-level :info) (opengl-version '(3 3)) samples blocking)
   "Bootsraps a game allocating a window and other system resources. Instantiates game object
 defined with [`defgame`](#gamekit-defgame) which can be obtained via
 [`#'gamekit`](#gamekit-gamekit). Cannot be called twice - [`#'stop`](#gamekit-stop) should be
@@ -544,7 +545,8 @@ Example:
     (error "Only one active system of type 'gamekit-system is allowed"))
   (setf *gamekit-instance-class* classname)
   (startup `(:engine (:systems (,classname) :log-level ,log-level)
-             :host (:opengl-version ,opengl-version))
+             :host (:opengl-version ,opengl-version :samples ,samples)
+             :gamekit (:antialiased ,(not samples)))
            :blocking blocking))
 
 
