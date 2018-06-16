@@ -28,6 +28,11 @@ Example:
                               :zip \"/usr/bin/zip\"
                               :lisp \"/usr/bin/sbcl\")
 ```"
+  (let ((game-class-instance (find-class game-class nil)))
+    (unless game-class-instance
+      (error "Class with name ~A not found" game-class))
+    (unless (subtypep game-class-instance 'gamekit::gamekit-system)
+      (error "~A is not a gamekit instance class" game-class)))
   (apply #'trivial-gamekit::%mount-resources (trivial-gamekit::list-all-resources))
   (let ((game-class-package (make-symbol (package-name (symbol-package game-class))))
         (game-class-name (make-symbol (symbol-name game-class)))
