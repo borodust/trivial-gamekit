@@ -550,18 +550,24 @@ Example:
            :blocking blocking))
 
 
-(defun stop ()
+(defun %stop ()
+  (unwind-protect
+       (shutdown)
+    (setf *gamekit-instance-class* nil)))
+
+
+(defun stop (&key blocking)
   "Stops currently running game releasing acquired resources.
 
 Example:
 ```common_lisp
 \(gamekit:stop\)
 ```"
-  (unwind-protect
-       (shutdown)
-    (setf *gamekit-instance-class* nil)))
+  (if blocking
+      (%stop)
+      (in-new-thread "exit-thread"
+        (%stop))))
 
 
 (define-event-handler on-exit ((ev viewport-hiding-event))
-  (in-new-thread "exit-thread"
-    (stop)))
+  (stop))
