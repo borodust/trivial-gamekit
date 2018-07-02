@@ -189,13 +189,16 @@ Example:
 ```"))
 
 
+(ge.vg:defcanvas gamekit-canvas (next-method)
+  (funcall next-method))
+
+
 (defmethod draw :around ((system gamekit-system))
   (with-slots (canvas font framebuffer-size) system
     (gl:viewport 0 0 (x framebuffer-size) (y framebuffer-size))
     (gl:clear :color-buffer :depth-buffer :stencil-buffer)
-    (ge.vg:with-canvas (canvas)
-      (let ((*font* font))
-        (call-next-method)))))
+    (let ((*font* font))
+      (render t canvas :next-method #'call-next-method))))
 
 
 (defmethod initialize-resources :around ((system gamekit-system))
@@ -334,14 +337,14 @@ Example:
 
 (defun %initialize-graphics (this pixel-ratio)
   (with-slots (viewport-width viewport-height canvas font antialiased) this
-    (setf canvas (ge.vg:make-canvas viewport-width
+    (setf canvas (ge.vg:make-canvas 'gamekit-canvas viewport-width
                                     viewport-height
                                     :pixel-ratio pixel-ratio
                                     :antialiased antialiased))
-    (ge.vg:with-canvas (canvas)
-      (let ((font-face (ge.vg:register-font-face +font-name+
-                                                 (load-resource +font-name+))))
-        (setf font (ge.vg:make-font font-face :size 32))))
+    (let ((font-face (ge.vg:register-font-face +font-name+
+                                               (load-resource +font-name+)
+                                               canvas)))
+      (setf font (ge.vg:make-font font-face :size 32)))
     (setf (swap-interval) 1)
     (initialize-graphics this)))
 
