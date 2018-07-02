@@ -38,6 +38,7 @@
            gamekit
            act
            draw
+           push-action
 
            register-resource-package
            define-image

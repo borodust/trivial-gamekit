@@ -246,9 +246,10 @@ Example:
     (alist-hash-table (mapcar #'to-package-pair resource-paths))))
 
 
-(defun push-action (game action)
-  (with-slots (action-queue) game
-    (push-task action action-queue)))
+(defun push-action (action)
+  (when-let ((gamekit (gamekit)))
+    (with-slots (action-queue) gamekit
+      (push-task action action-queue))))
 
 
 (defgeneric notice-resources (game &rest resource-names)
@@ -299,14 +300,14 @@ Example:
                (apply #'notice-resources game resource-names)))
         (run (>> (loading-flow resource-registry #'get-canvas resource-names)
                  (instantly ()
-                   (push-action game #'notify-game))))))))
+                   (push-action #'notify-game))))))))
 
 
 (define-event-handler on-framebuffer-change ((ev framebuffer-size-change-event) width height)
   (when-let ((gamekit (gamekit)))
     (flet ((update-framebuffer ()
              (setf (%framebuffer-size-of gamekit) (vec2 width height))))
-      (push-action gamekit #'update-framebuffer))))
+      (push-action #'update-framebuffer))))
 
 
 (defun %mount-for-executable (this)
