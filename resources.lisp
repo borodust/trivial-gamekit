@@ -13,7 +13,7 @@
 (define-constant +kit-resource-root+ "/_gamekit/"
   :test #'equal)
 
-(define-constant +font-name+ (format nil "~A~A/" +kit-resource-root+ "NotoMono-Regular")
+(define-constant +font-name+ (format nil "~A~A" +kit-resource-root+ "NotoMono-Regular")
   :test #'equal)
 
 (defvar *resources* nil)
