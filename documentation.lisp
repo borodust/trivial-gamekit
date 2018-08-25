@@ -15,7 +15,7 @@
   "
 
 Example:
-```common_lisp
+```common-lisp
 ```")
 |#
 
@@ -23,7 +23,7 @@ Example:
   "Makes a two-dimensional vector.
 
 Example:
-```common_lisp
+```common-lisp
 (gamekit:vec2 0 0)
 ```")
 
@@ -31,7 +31,7 @@ Example:
   "Makes a three-dimensional vector.
 
 Example:
-```common_lisp
+```common-lisp
 (gamekit:vec3 1 1 2)
 ```")
 
@@ -39,7 +39,7 @@ Example:
   "Makes a four-dimensional vector.
 
 Example:
-```common_lisp
+```common-lisp
 (gamekit:vec4 1 1 2 3)
 ```")
 
@@ -47,7 +47,7 @@ Example:
   "Reads first element of a vector.
 
 Example:
-```common_lisp
+```common-lisp
 (gamekit:x (gamekit:vec2 1 1))
 ```")
 
@@ -55,7 +55,7 @@ Example:
   "Stores first element of a vector.
 
 Example:
-```common_lisp
+```common-lisp
 (setf (gamekit:x (gamekit:vec2 1 1)) 0)
 ```")
 
@@ -63,7 +63,7 @@ Example:
   "Reads second element of a vector.
 
 Example:
-```common_lisp
+```common-lisp
 (gamekit:y (gamekit:vec2 1 1))
 ```")
 
@@ -71,7 +71,7 @@ Example:
   "Stores second element of a vector.
 
 Example:
-```common_lisp
+```common-lisp
 (setf (gamekit:y (gamekit:vec2 1 1)) 0)
 ```")
 
@@ -79,7 +79,7 @@ Example:
   "Reads third element of a vector.
 
 Example:
-```common_lisp
+```common-lisp
 (gamekit:z (gamekit:vec4 1 1 2 3))
 ```")
 
@@ -87,7 +87,7 @@ Example:
   "Stores third element of a vector.
 
 Example:
-```common_lisp
+```common-lisp
 (setf (gamekit:z (gamekit:vec4 1 1 2 3)) 0)
 ```")
 
@@ -95,7 +95,7 @@ Example:
   "Reads fourth element of a vector.
 
 Example:
-```common_lisp
+```common-lisp
 (gamekit:w (gamekit:vec4 1 1 2 3))
 ```")
 
@@ -103,7 +103,7 @@ Example:
   "Stores fourth element of a vector.
 
 Example:
-```common_lisp
+```common-lisp
 (setf (gamekit:w (gamekit:vec4 1 1 2 3)) 0)
 ```")
 
@@ -111,7 +111,7 @@ Example:
   "Element-wise multiplication. Accepts both vectors and scalars.
 
 Example:
-```common_lisp
+```common-lisp
 (gamekit:mult 2 (gamekit:vec2 1 1) 0.5)
 ```")
 
@@ -119,7 +119,7 @@ Example:
   "Element-wise addition. Accepts both vectors and scalars.
 
 Example:
-```common_lisp
+```common-lisp
 (gamekit:add 1 (gamekit:vec2 1 1) -1)
 ```")
 
@@ -127,7 +127,7 @@ Example:
   "Element-wise subtraction. Accepts both vectors and scalars.
 
 Example:
-```common_lisp
+```common-lisp
 (gamekit:subt 1 (gamekit:vec2 1 1) (gamekit:vec2 -1 -1))
 ```")
 
@@ -135,7 +135,7 @@ Example:
   "Element-wise division. Accepts both vectors and scalars.
 
 Example:
-```common_lisp
+```common-lisp
 (gamekit:div (gamekit:vec2 1 1) 2 (gamekit:vec2 0.5 0.5))
 ```")
 
@@ -145,7 +145,7 @@ Use `:fill-color` key parameter to change text's color. To change a font, pass o
 with [`#'make-font`](#gamekit-make-font) via `:font` parameter.
 
 Example:
-```common_lisp
+```common-lisp
 (gamekit:draw-text \"Hello, Gamekit!\" (gamekit:vec2 11 23)
                    :fill-color (gamekit:vec4 0 0 0 1)
                    :font (gamekit:make-font 'example-package::noto-sans 32))
@@ -157,7 +157,7 @@ parameter. Third parameter is a color to draw a line with. `:thickness` is a sca
 point value controlling pixel-width of a line.
 
 Example:
-```common_lisp
+```common-lisp
 (gamekit:draw-line (gamekit:vec2 8 5) (gamekit:vec2 32 11)
                    (gamekit:vec4 1 0.5 0 1)
                    :thickness 1.5)
@@ -170,7 +170,7 @@ a curve's color. `:thickness` is a scalar floating point value controlling pixel
 curve.
 
 Example:
-```common_lisp
+```common-lisp
 (gamekit:draw-line (gamekit:vec2 8 5) (gamekit:vec2 32 11)
                    (gamekit:vec2 0 5) (gamekit:vec2 32 0)
                    (gamekit:vec4 1 0.5 0 1)
@@ -185,7 +185,7 @@ it. `:thickness` controls pixel width of struck edges. Use `:rounding` in pixels
 rectangle corners.
 
 Example:
-```common_lisp
+```common-lisp
 (gamekit:draw-rect (gamekit:vec2 0 0) 314 271
                    :fill-paint (gamekit:vec4 1 0.75 0.5 0.5)
                    :stroke-paint (gamekit:vec4 0 0 0 1)
@@ -199,7 +199,7 @@ Provide color with `:fill-paint` paramater to fill the inner area of the circle 
 controls pixel width of struck border.
 
 Example:
-```common_lisp
+```common-lisp
 (gamekit:draw-circle (gamekit:vec2 100 500) 3/4
                      :fill-paint (gamekit:vec4 1 1 1 1)
                      :stroke-paint (gamekit:vec4 0 0 0 1)
@@ -213,7 +213,7 @@ ellipse with. If `:stroke-paint` color is provided, ellipse's border will be str
 it. `:thickness` controls pixel width of struck border.
 
 Example:
-```common_lisp
+```common-lisp
 (gamekit:draw-ellipse (gamekit:vec2 128 128) 16 32
                       :fill-paint (gamekit:vec4 0 0 0 1)
                       :stroke-paint (gamekit:vec4 1 1 1 1)
@@ -228,7 +228,7 @@ confined between a circle's curve and a line connecting angle points. `:fill-pai
 correspondingly.
 
 Example:
-```common_lisp
+```common-lisp
 (gamekit:draw-arc (gamekit:vec2 256 256) 128
                   (/ pi 4) (* (/ pi 2) 1.5)
                   :fill-paint (gamekit:vec4 0.25 0.5 0.75 1)
@@ -242,7 +242,7 @@ a color to fill insides of a polygon and `:stroke-paint` color is used to stroke
 edges. `:thickness` controls pixel-width of a stroke.
 
 Example:
-```common_lisp
+```common-lisp
 (gamekit:draw-polygon (list (gamekit:vec2 10 10) (gamekit:vec2 20 20)
                             (gamekit:vec2 30 20) (gamekit:vec2 20 10))
                       :fill-paint (gamekit:vec4 0.25 0.5 0.75 1)
@@ -255,7 +255,7 @@ Example:
 color to stroke a line with. `:thickness` controls pixel width of a line.
 
 Example:
-```common_lisp
+```common-lisp
 (gamekit:draw-polyline (list (gamekit:vec2 10 10) (gamekit:vec2 20 20)
                              (gamekit:vec2 30 20) (gamekit:vec2 20 10))
                        (gamekit:vec4 0.75 0.5 0.25 1)
@@ -270,7 +270,7 @@ keys tell width and height of a subimage to draw. They are optional and could be
 a subimage with full height and width available.
 
 Example:
-```common_lisp
+```common-lisp
 (gamekit:draw-image (gamekit:vec2 314 271) 'example-package::logo
                     :origin (gamekit:vec2 0 0)
                     :width 320
@@ -283,7 +283,7 @@ draw operations will be affected by this change unless wrapped with
 [`with-pushed-canvas`](#gamekit-with-pushed-canvas) macro.
 
 Example:
-```common_lisp
+```common-lisp
 (gamekit:translate-canvas 100 500)
 ```")
 
@@ -293,7 +293,7 @@ be affected by this change unless wrapped with
 [`with-pushed-canvas`](#gamekit-with-pushed-canvas) macro.
 
 Example:
-```common_lisp
+```common-lisp
 (gamekit:rotate-canvas (/ pi 2))
 ```")
 
@@ -303,7 +303,7 @@ affected by this change unless wrapped with [`with-pushed-canvas`](#gamekit-with
 macro.
 
 Example:
-```common_lisp
+```common-lisp
 (gamekit:scale-canvas 0.5 1.5)
 ```")
 
@@ -313,7 +313,7 @@ body and restores upon exist from the body. All transformation operations inside
 don't affect outer canvas outside of a body of this macro.
 
 Example:
-```common_lisp
+```common-lisp
 (gamekit:translate-canvas 400 300)
 (gamekit:with-pushed-canvas ()
   (gamekit:rotate-canvas (/ pi 4)))
