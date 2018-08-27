@@ -555,9 +555,10 @@ Example:
 
 
 (defun %stop ()
-  (unwind-protect
-       (shutdown)
-    (setf *gamekit-instance-class* nil)))
+  (when *gamekit-instance-class*
+    (unwind-protect
+         (shutdown)
+      (setf *gamekit-instance-class* nil))))
 
 
 (defun stop (&key blocking)
