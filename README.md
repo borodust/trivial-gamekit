@@ -5,12 +5,17 @@ Library for getting into gamedev with Common Lisp! Very simple interface to grap
 
 ## Requirements
 
-* OpenGL 3.3+
+* OpenGL 2.1 or 3.3+
 * 64-bit (x86_64) Windows, GNU/Linux or macOS
 * x86_64 SBCL or CCL
 
 
 ## Installation and loading
+
+By default, `trivial-gamekit` works in OpenGL 3.3 mode. To enable OpenGL 2.1 you need to
+```lisp
+(pushnew :bodge-gl2 *features*)
+```
 
 ```lisp
 ;; add cl-bodge distribution into quicklisp
