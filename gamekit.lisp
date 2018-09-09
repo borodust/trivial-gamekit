@@ -301,7 +301,7 @@ Example:
                canvas)
              (notify-game ()
                (apply #'notice-resources game resource-names)))
-        (run (>> (loading-flow resource-registry #'get-canvas resource-names)
+        (run (flow:>> (loading-flow resource-registry #'get-canvas resource-names)
                  (instantly ()
                    (push-action #'notify-game))))))))
 
@@ -368,7 +368,7 @@ Example:
              (%draw ()
                (draw this)
                (swap-buffers)))
-      (loop-flow (>> (instantly () (%act))
+      (loop-flow (flow:>> (instantly () (%act))
                      (for-graphics () (%draw)))
          (lambda () (enabledp this))))))
 
@@ -381,19 +381,20 @@ Example:
     (%mount-for-executable this)))
 
 (defmethod enabling-flow ((this gamekit-system))
-  (>> (call-next-method)
-      (for-host ()
-        (%initialize-host this))
-      (for-graphics (pixel-ratio)
-        (%initialize-graphics this pixel-ratio))
-      (->> ()
-        (%prepare-resources this))
-      (instantly ()
-        (initialize-audio this)
-        (post-initialize this)
-        (run (>> (%game-loop this)
-                 (instantly ()
-                   (pre-destroy this)))))))
+  (flow:>>
+   (call-next-method)
+   (for-host ()
+     (%initialize-host this))
+   (for-graphics (pixel-ratio)
+     (%initialize-graphics this pixel-ratio))
+   (flow:->> ()
+     (%prepare-resources this))
+   (instantly ()
+     (initialize-audio this)
+     (post-initialize this)
+     (run (flow:>> (%game-loop this)
+                   (instantly ()
+                     (pre-destroy this)))))))
 
 
 (defun resource-by-id (id)
@@ -570,7 +571,7 @@ Example:
 ```"
   (if blocking
       (%stop)
-      (in-new-thread "exit-thread"
+      (in-new-thread ("exit-thread")
         (%stop))))
 
 

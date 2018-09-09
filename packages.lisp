@@ -1,7 +1,7 @@
 (cl:defpackage :trivial-gamekit
   (:nicknames :gamekit)
   (:use :cl :cl-bodge.graphics :cl-bodge.audio :cl-bodge.engine
-        :cl-bodge.utils :cl-bodge.resources :cl-bodge.host)
+        :bodge-util :cl-bodge.resources :cl-bodge.host)
   (:import-from :cl-bodge.canvas
                 draw-line
                 draw-curve

@@ -4,7 +4,7 @@
   :author "Pavel Korolev"
   :mailto "dev@borodust.org"
   :license "MIT"
-  :depends-on (log4cl cl-bodge/graphics cl-bodge/audio cl-bodge/host
+  :depends-on (log4cl bodge-utilities cl-bodge/graphics cl-bodge/audio cl-bodge/host
                       cl-bodge/resources cl-bodge/canvas
                       uiop cl-muth cl-fad cl-muth)
   :serial t

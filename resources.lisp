@@ -49,24 +49,27 @@
 
 
 (defun %load-sound (resource-name)
-  (>> (resource-flow resource-name)
-      (concurrently ((sound))
-        (let* ((source (ge.snd:make-audio-source)))
-          (with-disposable ((buffer (ge.snd:make-audio-buffer sound)))
-            (ge.snd:attach-audio-buffer buffer source))
-          source))))
+  (flow:>>
+   (resource-flow resource-name)
+   (concurrently ((sound))
+     (let* ((source (ge.snd:make-audio-source)))
+       (with-disposable ((buffer (ge.snd:make-audio-buffer sound)))
+         (ge.snd:attach-audio-buffer buffer source))
+       source))))
 
 
 (defun %load-image (resource-name canvas-provider &key)
-  (>> (resource-flow resource-name)
-      (for-graphics ((image))
-        (ge.vg:make-image-paint image :canvas (funcall canvas-provider)))))
+  (flow:>>
+   (resource-flow resource-name)
+   (for-graphics ((image))
+     (ge.vg:make-image-paint image :canvas (funcall canvas-provider)))))
 
 
 (defun %load-font (resource-name canvas-provider &key)
-  (>> (resource-flow resource-name)
-      (for-graphics ((font-face))
-        (ge.vg:register-font-face resource-name font-face (funcall canvas-provider)))))
+  (flow:>>
+   (resource-flow resource-name)
+   (for-graphics ((font-face))
+     (ge.vg:register-font-face resource-name font-face (funcall canvas-provider)))))
 
 
 (defun %load-resource (resource-name type canvas-provider)
@@ -80,16 +83,17 @@
   (with-slots (resources) loader
     (unless (ge.ng:executablep)
       (apply #'%mount-resources resource-names))
-    (>> (~> (loop for (id type) in *resources*
-               when (member id resource-names :test #'eq)
-               collect (when-let ((id id)
-                                  (type type)
-                                  (resource-path (game-resource-path id)))
-                         (>> (%load-resource resource-path type canvas-provider)
-                             (instantly (resource)
-                               (cons id resource))))))
-        (concurrently ((results))
-          (loop for (id . resource) in results
+    (flow:>>
+     (flow:~> (loop for (id type) in *resources*
+                    when (member id resource-names :test #'eq)
+                      collect (when-let ((id id)
+                                         (type type)
+                                         (resource-path (game-resource-path id)))
+                                (flow:>> (%load-resource resource-path type canvas-provider)
+                                         (instantly (resource)
+                                           (cons id resource))))))
+     (concurrently ((results))
+       (loop for (id . resource) in results
              do (setf (gethash id resources) resource))))))
 
 
