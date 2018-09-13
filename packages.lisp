@@ -1,20 +1,19 @@
-(cl:defpackage :trivial-gamekit
+(bodge-util:define-package :trivial-gamekit
   (:nicknames :gamekit)
   (:use :cl :cl-bodge.graphics :cl-bodge.audio :cl-bodge.engine
         :bodge-util :cl-bodge.resources :cl-bodge.host)
-  (:import-from :cl-bodge.canvas
-                draw-line
-                draw-curve
-                draw-rect
-                draw-circle
-                draw-ellipse
-                draw-arc
-                draw-polygon
-                draw-polyline
-                translate-canvas
-                rotate-canvas
-                scale-canvas
-                with-pushed-canvas)
+  (:reexport-from :cl-bodge.canvas
+             draw-line
+             draw-curve
+             draw-rect
+             draw-circle
+             draw-ellipse
+             draw-arc
+             draw-polygon
+             draw-polyline
+             translate-canvas
+             rotate-canvas
+             scale-canvas)
   (:export start
            stop
 
@@ -58,14 +57,6 @@
            bind-cursor
 
            draw-text
-           draw-line
-           draw-curve
-           draw-rect
-           draw-circle
-           draw-ellipse
-           draw-arc
-           draw-polygon
-           draw-polyline
            draw-image
 
            translate-canvas

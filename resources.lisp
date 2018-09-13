@@ -62,7 +62,7 @@
   (flow:>>
    (resource-flow resource-name)
    (for-graphics ((image))
-     (ge.vg:make-image-paint image :canvas (funcall canvas-provider)))))
+     (ge.vg:make-image-paint (funcall canvas-provider) image))))
 
 
 (defun %load-font (resource-name canvas-provider &key)

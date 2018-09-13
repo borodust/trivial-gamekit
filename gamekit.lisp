@@ -341,9 +341,9 @@ Example:
                                     viewport-height
                                     :pixel-ratio pixel-ratio
                                     :antialiased antialiased))
-    (let ((font-face (ge.vg:register-font-face +font-name+
-                                               (load-resource +font-name+)
-                                               canvas)))
+    (let ((font-face (ge.vg:register-font-face canvas
+                                               +font-name+
+                                               (load-resource +font-name+))))
       (setf font (ge.vg:make-font font-face :size 32)))
     (setf (swap-interval) 1)
     (initialize-graphics this)))
@@ -496,16 +496,21 @@ Example:
   (play-sound sound-id :looped-p looped-p))
 
 
+(defmacro with-pushed-canvas (() &body body)
+  `(ge.vg:with-retained-canvas
+     ,@body))
+
+
 (defun draw-image (position image-id &key origin width height)
   (when-let ((image (resource-by-id image-id)))
     (let* ((image-origin (or origin +origin+))
            (image-width (if width
                             width
-                            (width-of image)))
+                            (ge.vg:image-paint-width image)))
            (image-height (if height
                              height
-                             (height-of image))))
-      (ge.vg:with-pushed-canvas ()
+                             (ge.vg:image-paint-height image))))
+      (ge.vg:with-retained-canvas
         (ge.vg:translate-canvas (- (x position) (x image-origin)) (- (y position) (y image-origin)))
         (draw-rect image-origin image-width image-height :fill-paint image)))))
 
@@ -529,7 +534,7 @@ Example:
 
 (defun draw-text (string origin &key (fill-color *black*) (font *font*))
   (ge.vg:with-font (font)
-    (ge.vg:draw-text origin string :fill-color fill-color)))
+    (ge.vg:draw-text origin string fill-color)))
 
 
 ;;;
