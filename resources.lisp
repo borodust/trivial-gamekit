@@ -69,7 +69,7 @@
   (flow:>>
    (resource-flow resource-name)
    (for-graphics ((font-face))
-     (ge.vg:register-font-face resource-name font-face (funcall canvas-provider)))))
+     (ge.vg:register-font-face (funcall canvas-provider) resource-name font-face))))
 
 
 (defun %load-resource (resource-name type canvas-provider)
