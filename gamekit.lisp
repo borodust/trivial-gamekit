@@ -190,6 +190,8 @@ Example:
 
 
 (ge.vg:defcanvas gamekit-canvas (next-method)
+  (loop for sketch-name in *sketch-list*
+        do (%render-sketch sketch-name))
   (funcall next-method))
 
 

@@ -10,6 +10,7 @@
   :serial t
   :components ((:file "packages")
                (:file "resources")
+               (:file "sketch")
                (:file "gamekit")))
 
 

@@ -67,6 +67,8 @@
            play-sound
            stop-sound
 
+           defsketch
+
            ;; deprecated
            initialize-resources
            import-image
