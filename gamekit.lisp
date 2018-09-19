@@ -315,6 +315,16 @@ Example:
       (push-action #'update-framebuffer))))
 
 
+(define-event-handler on-window-size-change ((ev viewport-size-change-event) width height)
+  (when-let ((gamekit (gamekit)))
+    (flet ((update-viewport ()
+             (with-slots (viewport-width viewport-height canvas) gamekit
+               (setf viewport-width width
+                     viewport-height height)
+               (ge.vg:update-canvas-size canvas width height))))
+      (push-action #'update-viewport))))
+
+
 (defun %mount-for-executable (this)
   (with-slots (resource-path prepare-resources) this
     (unless (executablep)
@@ -542,7 +552,9 @@ Example:
 ;;;
 ;;; Startup routines
 ;;;
-(defun start (classname &key (log-level :info) (opengl-version '(3 3)) samples blocking)
+(defun start (classname &key (log-level :info) (opengl-version '(3 3)) samples blocking
+                          viewport-resizable
+                          (viewport-decorated t))
   "Bootsraps a game allocating a window and other system resources. Instantiates game object
 defined with [`defgame`](#gamekit-defgame) which can be obtained via
 [`#'gamekit`](#gamekit-gamekit). Cannot be called twice - [`#'stop`](#gamekit-stop) should be
@@ -557,7 +569,10 @@ Example:
     (error "Only one active system of type 'gamekit-system is allowed"))
   (setf *gamekit-instance-class* classname)
   (startup `(:engine (:systems (,classname) :log-level ,log-level)
-             :host (:opengl-version ,opengl-version :samples ,samples)
+             :host (:opengl-version ,opengl-version
+                    :samples ,samples
+                    :viewport-resizable ,viewport-resizable
+                    :viewport-decorated ,viewport-decorated)
              :gamekit (:antialiased ,(not samples)))
            :blocking blocking))
 
