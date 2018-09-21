@@ -317,12 +317,18 @@ Example:
 
 (define-event-handler on-window-size-change ((ev viewport-size-change-event) width height)
   (when-let ((gamekit (gamekit)))
-    (flet ((update-viewport ()
-             (with-slots (viewport-width viewport-height canvas) gamekit
-               (setf viewport-width width
-                     viewport-height height)
-               (ge.vg:update-canvas-size canvas width height))))
-      (push-action #'update-viewport))))
+    (with-slots (viewport-width viewport-height canvas pixel-ratio) gamekit
+      (run
+       (for-host ()
+         (let ((w (/ width (viewport-scale)))
+               (h (/ height (viewport-scale))))
+           (flet ((update-viewport ()
+                    (setf viewport-width w
+                          viewport-height h)
+                    (ge.vg:update-canvas-size canvas viewport-width viewport-height)
+                    (ge.vg:update-canvas-pixel-ratio canvas (/ (x (%framebuffer-size-of gamekit))
+                                                               viewport-width ))))
+             (push-action #'update-viewport))))))))
 
 
 (defun %mount-for-executable (this)
