@@ -545,6 +545,18 @@ Example:
   (ge.vg:make-font (resource-by-id font-id) :size size))
 
 
+(defun calc-text-bounds (text &optional (font *font*))
+  "Calculates text bounds with the font provided or the default one otherwise and returns
+several values: origin as vec2, width, height and calculated advance
+
+Example:
+```common_lisp
+\(gamekit:calc-text-bounds \"hello there\"\)
+```"
+  (ge.vg:with-font (font)
+   (ge.vg:canvas-text-bounds text)))
+
+
 (defun print-text (string x y &optional (color *black*))
   "Deprecated. Use #'draw-text instead"
   (draw-text string (vec2 x y) :fill-color color))

@@ -14,7 +14,8 @@
       `(progn
          (defmethod %render-sketch ((,this (eql ',name)))
            (declare (ignore ,this))
-           ,@body)
+           (with-pushed-canvas ()
+             ,@body))
          (pushnew ',name *sketch-list*)))))
 
 

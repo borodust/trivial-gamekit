@@ -46,6 +46,7 @@
            prepare-resources
            notice-resources
            make-font
+           calc-text-bounds
 
            initialize-host
            initialize-graphics
@@ -68,6 +69,8 @@
            stop-sound
 
            defsketch
+           remove-sketch
+           remove-all-sketches
 
            ;; deprecated
            initialize-resources
