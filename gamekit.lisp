@@ -19,6 +19,7 @@
    (resource-registry)
    (viewport-width :initarg :viewport-width :initform 640)
    (viewport-height :initarg :viewport-height :initform 480)
+   (viewport-scale :initform 1f0)
    (framebuffer-size :initform (vec2 640 480) :accessor %framebuffer-size-of)
    (fullscreen-p :initarg :fullscreen-p :initform nil)
    (prepare-resources :initform t)
@@ -66,7 +67,7 @@ to `t`.
 Example:
 
 ```common_lisp
-(gamekit:defgame example ()
+\(gamekit:defgame example ()
   ;; some game related state
   ((world :initform (make-instance 'world))
    (game-state))
@@ -317,11 +318,14 @@ Example:
 
 (define-event-handler on-window-size-change ((ev viewport-size-change-event) width height)
   (when-let ((gamekit (gamekit)))
-    (with-slots (viewport-width viewport-height canvas pixel-ratio) gamekit
+    (with-slots (viewport-width viewport-height canvas pixel-ratio
+                 viewport-scale)
+        gamekit
       (run
        (for-host ()
-         (let ((w (/ width (viewport-scale)))
-               (h (/ height (viewport-scale))))
+         (setf viewport-scale (viewport-scale))
+         (let ((w (/ width viewport-scale))
+                (h (/ height viewport-scale)))
            (flet ((update-viewport ()
                     (setf viewport-width w
                           viewport-height h)
@@ -373,11 +377,14 @@ Example:
         (loading-flow resource-registry #'%get-canvas (list-all-resources))))))
 
 (defun %game-loop (this)
-  (with-slots (action-queue cursor-position cursor-changed-p cursor-action) this
+  (with-slots (action-queue cursor-position cursor-changed-p cursor-action
+               viewport-scale)
+      this
     (labels ((%process-cursor ()
                (when (and cursor-action cursor-changed-p)
                  (funcall cursor-action
-                          (x cursor-position) (y cursor-position))
+                          (/ (x cursor-position) viewport-scale)
+                          (/ (y cursor-position) viewport-scale))
                  (setf cursor-changed-p nil)))
              (%act ()
                (%process-cursor)
