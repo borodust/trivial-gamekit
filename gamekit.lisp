@@ -408,9 +408,8 @@ Example:
     (initialize-resources this)
     (%mount-for-executable this)))
 
-(defmethod enabling-flow ((this gamekit-system))
+(defmethod enabling-flow list ((this gamekit-system))
   (flow:>>
-   (call-next-method)
    (for-host ()
      (%initialize-host this))
    (for-graphics (pixel-ratio)
