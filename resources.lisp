@@ -132,8 +132,7 @@ Example:
   (let ((package-table (alist-hash-table *resouce-packages*)))
     (loop for id in resource-names
        as (nil path) = (assoc-value *resources* id)
-       as base-path = (gethash (symbol-package id) package-table)
-       when base-path
+       as base-path = (or (gethash (symbol-package id) package-table) *default-pathname-defaults*)
        do (mount-filesystem (game-resource-path id) (merge-pathnames path base-path))
        collect id)))
 
@@ -142,8 +141,7 @@ Example:
   (let ((package-table (alist-hash-table *resouce-packages*)))
     (loop for package-name in package-names
        as package = (find-package package-name)
-       as base-path = (gethash package  package-table)
-       when base-path
+       as base-path = (or (gethash package package-table) *default-pathname-defaults*)
        append (loop for (id nil path) in *resources*
                  when (eq package (symbol-package id))
                  do (mount-filesystem (game-resource-path id) (merge-pathnames path base-path))
