@@ -27,6 +27,7 @@
    (canvas :initform nil :reader canvas-of)
    (font :initform nil :reader font-of)
    (antialiased :initform (property '(:gamekit :antialiased) t))
+   (button-action :initform nil)
    (action-queue :initform (make-task-queue)))
   (:default-initargs :depends-on '(graphics-system audio-system)))
 
@@ -218,9 +219,13 @@ Example:
 
 (define-event-handler on-keyboard-event ((ev keyboard-event) key state)
   (when-gamekit (gamekit)
-    (with-slots (keymap action-queue) gamekit
+    (with-slots (keymap action-queue button-action) gamekit
       (when-let ((action (getf (gethash key keymap) state)))
-        (push-task action action-queue )))))
+        (push-task action action-queue))
+      (when button-action
+        (flet ((call-action ()
+                 (funcall button-action key state)))
+          (push-task #'call-action action-queue))))))
 
 
 (defun bodge-mouse-button->gamekit (bodge-button)
@@ -233,9 +238,14 @@ Example:
 
 (define-event-handler on-mouse-event ((ev mouse-event) button state)
   (when-gamekit (gamekit)
-    (with-slots (keymap action-queue) gamekit
+    (with-slots (keymap action-queue button-action) gamekit
       (when-let ((action (getf (gethash (bodge-mouse-button->gamekit button) keymap) state)))
-        (push-task action action-queue)))))
+        (push-task action action-queue))
+      (when button-action
+        (flet ((call-action ()
+                 (funcall button-action (bodge-mouse-button->gamekit button)
+                          state)))
+          (push-task #'call-action action-queue))))))
 
 
 (define-event-handler on-cursor-event ((ev cursor-event) x y)
@@ -466,14 +476,21 @@ Supported keys:
 
 Example
 ```common_lisp
-(gamekit:bind-button :enter :pressed
+\(gamekit:bind-button :enter :pressed
                      (lambda ()
                        (start-game-for *player*)))
 ```"
-  (let ((gamekit (gamekit)))
+  (when-gamekit (gamekit)
     (with-slots (keymap) gamekit
       (with-system-lock-held (gamekit)
         (setf (getf (gethash key keymap) state) action)))))
+
+
+(defun bind-any-button (action)
+  (when-gamekit (gamekit)
+    (with-slots (button-action) gamekit
+      (with-system-lock-held (gamekit)
+        (setf button-action action)))))
 
 
 (defun bind-cursor (action)

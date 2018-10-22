@@ -55,6 +55,7 @@
            pre-destroy
 
            bind-button
+           bind-any-button
            bind-cursor
 
            draw-text
