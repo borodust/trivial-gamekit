@@ -122,7 +122,7 @@ Example:
 
 
 (defgeneric act (system)
-  (:method ((system gamekit-system)) (declare (ignore system)))
+  (:method (system) (declare (ignore system)))
   (:documentation "Called every game loop iteration for user to add
 any per-frame behavior to the game. NOTE: all drawing operations should
 be performed in [`#'draw`](#gamekit-draw) method.
@@ -135,7 +135,7 @@ Example:
 
 
 (defgeneric draw (system)
-  (:method ((system gamekit-system)) (declare (ignore system)))
+  (:method (system) (declare (ignore system)))
   (:documentation "Called every game loop iteration for frame rendering.
 All drawing operations should be performed in this method.
 
@@ -147,23 +147,24 @@ Example:
 
 
 (defgeneric initialize-resources (system)
-  (:method ((system gamekit-system)) (declare (ignore system))))
+  (:method (system) (declare (ignore system))))
 
 
 (defgeneric initialize-audio (system)
-  (:method ((system gamekit-system)) (declare (ignore system))))
+  (:method (system) (declare (ignore system))))
 
 
 (defgeneric initialize-graphics (system)
-  (:method ((system gamekit-system)) (declare (ignore system))))
+  (:method (system) (declare (ignore system))))
 
 
 (defgeneric initialize-host (system)
-  (:method ((system gamekit-system)) (declare (ignore system))))
+  (:method (system) (declare (ignore system))))
 
 
 (defgeneric post-initialize (system)
-  (:method ((system gamekit-system)) (declare (ignore system)))
+  (:method (system)
+    (declare (ignore system)))
   (:documentation "This function is called after game instance is fully initialized, right
 before main game loop starts its execution. Put initialization code for your application into
 method of this function. For example, it would be logical to bind input via
@@ -171,14 +172,14 @@ method of this function. For example, it would be logical to bind input via
 
 Example:
 ```common_lisp
-(defmethod gamekit:post-initialize ((this example))
+\(defmethod gamekit:post-initialize ((this example))
   (init-game)
   (bind-input))
 ```"))
 
 
 (defgeneric pre-destroy (system)
-  (:method ((system gamekit-system)) (declare (ignore system)))
+  (:method (system) (declare (ignore system)))
   (:documentation "This function is called just before shutting down a game instance for you to
 free all acquired resources and do any other clean up procedures.
 
