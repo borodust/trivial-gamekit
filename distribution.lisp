@@ -45,5 +45,5 @@ Example:
                                                                             "epilogue.lisp")
                                    :bindings (list
                                               (cons '*gamekit-game-class*
-                                                    ``(,',game-class-package ,',game-class-name)))))
-  (ge.dist:make-distribution system-name :build-directory build-directory))
+                                                    ``(,',game-class-package ,',game-class-name))))
+    (ge.dist:make-distribution system-name :build-directory build-directory)))
