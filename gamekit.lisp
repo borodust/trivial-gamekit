@@ -22,6 +22,7 @@
    (viewport-scale :initform 1f0)
    (framebuffer-size :initform (vec2 640 480) :accessor %framebuffer-size-of)
    (fullscreen-p :initarg :fullscreen-p :initform nil)
+   (autoscaled :initarg :autoscaled :initform nil)
    (prepare-resources :initform t)
    (viewport-title :initarg :viewport-title :initform "Trivial Gamekit")
    (canvas :initform nil :reader canvas-of)
@@ -42,7 +43,8 @@
                               :viewport-height
                               :viewport-title
                               :fullscreen-p
-                              :prepare-resources))
+                              :prepare-resources
+                              :autoscaled))
      collect opt into extended
      else
      collect opt into std
@@ -87,8 +89,9 @@ Example:
                             (viewport-height :viewport-height)
                             (viewport-title :viewport-title)
                             (fullscreen-p :fullscreen-p)
-                            (prepare-resources :prepare-resources))
-            (alist-hash-table extended)
+                            (prepare-resources :prepare-resources)
+                            (autoscaled :autoscaled))
+                           (alist-hash-table extended)
           `(progn
              (defmethod configure-game ((this ,name))
                ,@(when viewport-width
@@ -99,6 +102,8 @@ Example:
                    `((setf (slot-value this 'viewport-title) ,@viewport-title)))
                ,@(when fullscreen-p
                    `((setf (slot-value this 'fullscreen-p) ,@fullscreen-p)))
+               ,@(when autoscaled
+                   `((setf (slot-value this 'autoscaled) ,@autoscaled)))
                ,@(multiple-value-bind (value exist-p) prepare-resources
                    `((setf (slot-value this 'prepare-resources) ,(if exist-p
                                                                      (first value)
@@ -328,8 +333,10 @@ Example:
 
 
 (defun update-viewport (gamekit w h scale)
-  (with-slots (viewport-width viewport-height viewport-scale canvas pixel-ratio) gamekit
-    (setf viewport-scale scale
+  (with-slots (viewport-width viewport-height viewport-scale
+               canvas pixel-ratio autoscaled)
+      gamekit
+    (setf viewport-scale (if autoscaled scale 1f0)
           viewport-width w
           viewport-height h)
     (ge.vg:update-canvas-size canvas viewport-width viewport-height)
