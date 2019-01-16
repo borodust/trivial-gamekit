@@ -22,7 +22,7 @@
    (viewport-scale :initform 1f0)
    (framebuffer-size :initform (vec2 640 480) :accessor %framebuffer-size-of)
    (fullscreen-p :initarg :fullscreen-p :initform nil)
-   (autoscaled :initarg :autoscaled :initform nil)
+   (autoscaled :initarg :autoscaled :initform t)
    (prepare-resources :initform t)
    (viewport-title :initarg :viewport-title :initform "Trivial Gamekit")
    (canvas :initform nil :reader canvas-of)
@@ -336,9 +336,10 @@ Example:
   (with-slots (viewport-width viewport-height viewport-scale
                canvas pixel-ratio autoscaled)
       gamekit
-    (setf viewport-scale (if autoscaled scale 1f0)
-          viewport-width w
-          viewport-height h)
+    (let ((scale (if autoscaled scale 1f0)))
+      (setf viewport-scale scale
+            viewport-width (/ w scale)
+            viewport-height (/ h scale)))
     (ge.vg:update-canvas-size canvas viewport-width viewport-height)
     (ge.vg:update-canvas-pixel-ratio canvas (/ (x (%framebuffer-size-of gamekit))
                                                viewport-width ))))
@@ -348,11 +349,9 @@ Example:
   (when-let ((gamekit (gamekit)))
     (run
      (for-host ()
-       (let* ((scale (viewport-scale))
-              (w (/ width scale))
-              (h (/ height scale)))
+       (let* ((scale (viewport-scale)))
          (flet ((%update-viewport ()
-                  (update-viewport gamekit w h scale)))
+                  (update-viewport gamekit width height scale)))
            (push-action #'%update-viewport)))))))
 
 
