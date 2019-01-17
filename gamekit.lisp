@@ -22,7 +22,7 @@
    (viewport-scale :initform 1f0)
    (framebuffer-size :initform (vec2 640 480) :accessor %framebuffer-size-of)
    (fullscreen-p :initarg :fullscreen-p :initform nil)
-   (autoscaled :initarg :autoscaled :initform t)
+   (autoscaled :initform (property '(:host :autoscaled) t))
    (prepare-resources :initform t)
    (viewport-title :initarg :viewport-title :initform "Trivial Gamekit")
    (canvas :initform nil :reader canvas-of)
@@ -43,8 +43,7 @@
                               :viewport-height
                               :viewport-title
                               :fullscreen-p
-                              :prepare-resources
-                              :autoscaled))
+                              :prepare-resources))
      collect opt into extended
      else
      collect opt into std
@@ -89,8 +88,7 @@ Example:
                             (viewport-height :viewport-height)
                             (viewport-title :viewport-title)
                             (fullscreen-p :fullscreen-p)
-                            (prepare-resources :prepare-resources)
-                            (autoscaled :autoscaled))
+                            (prepare-resources :prepare-resources))
                            (alist-hash-table extended)
           `(progn
              (defmethod configure-game ((this ,name))
@@ -102,8 +100,6 @@ Example:
                    `((setf (slot-value this 'viewport-title) ,@viewport-title)))
                ,@(when fullscreen-p
                    `((setf (slot-value this 'fullscreen-p) ,@fullscreen-p)))
-               ,@(when autoscaled
-                   `((setf (slot-value this 'autoscaled) ,@autoscaled)))
                ,@(multiple-value-bind (value exist-p) prepare-resources
                    `((setf (slot-value this 'prepare-resources) ,(if exist-p
                                                                      (first value)
@@ -603,9 +599,13 @@ Example:
 ;;;
 ;;; Startup routines
 ;;;
-(defun start (classname &key (log-level :info) (opengl-version '(3 3)) samples blocking
+(defun start (classname &key (log-level :info)
+                          (opengl-version '(3 3))
+                          samples
+                          blocking
                           viewport-resizable
-                          (viewport-decorated t))
+                          (viewport-decorated t)
+                          (autoscaled t))
   "Bootsraps a game allocating a window and other system resources. Instantiates game object
 defined with [`defgame`](#gamekit-defgame) which can be obtained via
 [`#'gamekit`](#gamekit-gamekit). Cannot be called twice - [`#'stop`](#gamekit-stop) should be
@@ -623,7 +623,8 @@ Example:
              :host (:opengl-version ,opengl-version
                     :samples ,samples
                     :viewport-resizable ,viewport-resizable
-                    :viewport-decorated ,viewport-decorated)
+                    :viewport-decorated ,viewport-decorated
+                    :autoscaled ,autoscaled)
              :gamekit (:antialiased ,(not samples)))
            :blocking blocking))
 
