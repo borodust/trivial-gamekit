@@ -1,5 +1,0 @@
-*{{type}}* ***`{{name}}`*** `{{lambda-list}}`
-{: {{link}}}
-<div class="bodge-docstring" markdown="block">
-{{documentation}}
-</div>

@@ -113,18 +113,6 @@
 
 
 (defun register-resource-package (package-name path)
-  "Associates resource package with filesystem path. For proper resource handling it is
-recommended to put it as a top-level form, so resources could be located at load-time.
-
-First argument, a package name, must be a valid Common Lisp package name that could be used to
-locate package via #'find-package. Second argument is a filesystem path to a directory where
-resources can be found.
-
-Example:
-```common_lisp
-(gamekit:register-resource-package :example-package
-                                   \"/home/gamdev/example-game/assets/\")
-```"
   (setf (assoc-value *resouce-packages* (find-package package-name)) path))
 
 
@@ -172,18 +160,6 @@ Example:
 
 
 (defmacro define-image (name path)
-  "Registers image resource by name that can be used by [`#'draw-image`](#gamekit-draw-image)
-later. Second argument is a valid path to the resource.  Only .png images are supported at this
-moment.
-
-Name must be a symbol. Package of that symbol and its associated path (via
-[`#'register-resource-package`](#gamekit-register-resource-package)) will be used to locate the
-resource, if relative path is given as an argument to this macro.
-
-Example:
-```common_lisp
-(gamekit:define-image 'example-package::logo \"images/logo.png\")
-```"
   (once-only (name)
     `(progn
        (register-game-resource ,name ,path :image :type :png)
@@ -191,18 +167,6 @@ Example:
 
 
 (defmacro define-sound (name path)
-  "Registers sound resource by name that can be used by [`#'play-sound`](#gamekit-play-sound) later.
-Second argument is a valid path to the resource.  Formats supported: .wav, .ogg (Vorbis), .flac,
-.aiff.
-
-Name must be a symbol. Package of that symbol and its associated path (via
-[`#'register-resource-package`](#gamekit-register-resource-package)) will be used to locate the
-resource, if relative path is given as an argument to this macro.
-
-Example:
-```common_lisp
-(gamekit:define-sound 'example-package::blop \"sounds/blop.ogg\")
-```"
   (once-only (name)
     `(progn
        (register-game-resource ,name ,path :audio)
@@ -210,17 +174,7 @@ Example:
 
 
 (defmacro define-font (name path)
-  "Registers font resource by name that can be passed to [`#'make-font`](#gamekit-make-font) later.
-Second argument is a valid path to the resource. Only .ttf format is supported at this moment.
-
-Name must be a symbol. Package of that symbol and its associated path (via
-[`#'register-resource-package`](#gamekit-register-resource-package)) will be used to locate the
-resource, if relative path is given as an argument to this macro.
-
-Example:
-```common_lisp
-(gamekit:define-font 'example-package::noto-sans \"fonts/NotoSans-Regular.ttf\")
-```"  (once-only (name)
+  (once-only (name)
     `(progn
        (register-game-resource ,name ,path :font :type :ttf)
        (autoprepare ,name))))

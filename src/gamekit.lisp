@@ -51,34 +51,6 @@
 
 
 (defmacro defgame (name (&rest classes) &body ((&rest slots) &rest opts))
-  "Defines a game class that can be passed to [`#'start`](#gamekit-start) to run a game. `name` is
-the name of a class generated. `classes` are names of superclasses, `slots` - standard class
-slots and `opts` are class options. So, pretty much standard class definition except it does
-configure a class in certain ways specifically for `gamekit` use and allows passing additional
-options in `opts` apart from standard `:documentation`, `:default-initargs` and so others.
-
-Additional options that can be passed in `opts` are:
-
-* `:viewport-width` - width of the window and canvas
-* `:viewport-height` - height of the window and canvas
-* `:viewport-title` - title of the window
-* `:prepare-resources` - boolean value that indicates whether `gamekit` should load resources
-automatically on startup or if not, user prefers to load them dynamically on request. Defaults
-to `t`.
-
-Example:
-
-```common_lisp
-\(gamekit:defgame example ()
-  ;; some game related state
-  ((world :initform (make-instance 'world))
-   (game-state))
-  ;; options
-  (:viewport-width 800)
-  (:viewport-height 600)
-  (:viewport-title \"EXAMPLE\")
-  (:prepare-resources nil))
-```"
   (multiple-value-bind (std-opts extended) (split-opts opts)
     `(progn
        (defclass ,name (gamekit-system ,@classes)
@@ -113,39 +85,16 @@ Example:
 
 
 (defun gamekit ()
-  "Returns instance of a running game or `nil` if no game is started yet.
-
-Example:
-```common_lisp
-(gamekit:gamekit)
-```"
   (when *gamekit-instance-class*
     (ge.ng:engine-system *gamekit-instance-class*)))
 
 
 (defgeneric act (system)
-  (:method (system) (declare (ignore system)))
-  (:documentation "Called every game loop iteration for user to add
-any per-frame behavior to the game. NOTE: all drawing operations should
-be performed in [`#'draw`](#gamekit-draw) method.
-
-Example:
-```common_lisp
-(defmethod gamekit:act ((this example))
-  (report-fps))
-```"))
+  (:method (system) (declare (ignore system))))
 
 
 (defgeneric draw (system)
-  (:method (system) (declare (ignore system)))
-  (:documentation "Called every game loop iteration for frame rendering.
-All drawing operations should be performed in this method.
-
-Example:
-```common_lisp
-(defmethod gamekit:draw ((this example))
-  (gamekit:draw-text \"Hello, Gamedev!\" (gamekit:vec2 10 10)))
-```"))
+  (:method (system) (declare (ignore system))))
 
 
 (defgeneric initialize-resources (system)
@@ -166,36 +115,14 @@ Example:
 
 (defgeneric post-initialize (system)
   (:method (system)
-    (declare (ignore system)))
-  (:documentation "This function is called after game instance is fully initialized, right
-before main game loop starts its execution. Put initialization code for your application into
-method of this function. For example, it would be logical to bind input via
-[`#'bind-cursor`](#gamekit-bind-cursor) or [`#'bind-button`](#gamekit-bind-button) here.
-
-Example:
-```common_lisp
-\(defmethod gamekit:post-initialize ((this example))
-  (init-game)
-  (bind-input))
-```"))
+    (declare (ignore system))))
 
 
 (defgeneric pre-destroy (system)
-  (:method (system) (declare (ignore system)))
-  (:documentation "This function is called just before shutting down a game instance for you to
-free all acquired resources and do any other clean up procedures.
-
-Example:
-```common_lisp
-(defmethod gamekit:pre-destroy ((this example))
-  (release-foreign-memory)
-  (stop-threads))
-```"))
+  (:method (system) (declare (ignore system))))
 
 
 (ge.vg:defcanvas gamekit-canvas (next-method)
-  (loop for sketch-name in *sketch-list*
-        do (%render-sketch sketch-name))
   (funcall next-method))
 
 
@@ -273,42 +200,10 @@ Example:
 (defgeneric notice-resources (game &rest resource-names)
   (:method ((this gamekit-system) &rest resource-names)
     (declare (ignore this))
-    (log:info "Resources loaded: ~A" resource-names))
-  (:documentation "Called when resource names earlier requested with
-[`#'prepare-resources`](#gamekit-prepare-resources) which indicates those resources are ready to
-be used.
-
-Override this generic function to know when resources are ready.
-
-Example:
-```common_lisp
-(defmethod gamekit:notice-resources ((this example) &rest resource-names)
-  (declare (ignore resource-names))
-  (gamekit:play-sound 'example-package::blop)
-  (show-start-screen))
-```"))
+    (log:info "Resources loaded: ~A" resource-names)))
 
 
 (defun prepare-resources (&rest resource-names)
-  "Loads and prepares resources for later usage asynchronously. `resource-names` should be
-symbols used previously registered with `define-*` macros.
-
-This function returns immediately. When resources are ready for use
-[`#'notice-resources`](#gamekit-notice-resources) will be called with names that were passed to
-this function.
-
-`gamekit` by default will try to load and prepare all registered resources on startup which
-might take a substantial time, but then you don't need to call #'prepare-resources yourself. If
-you prefer load resources on demand and have a faster startup time, pass nil
-to :prepare-resources option of a [`defgame`](#gamekit-defgame) macro which will disable startup
-resource autoloading.
-
-Example:
-```common_lisp
-(gamekit:prepare-resources 'example-package::noto-sans
-                           'example-package::blop
-                           'example-package::logo)
-```"
   (log:trace "Preparing resources: ~A" resource-names)
   (let ((game (gamekit)))
     (with-slots (canvas resource-registry) game
@@ -443,45 +338,6 @@ Example:
 
 
 (defun bind-button (key state action)
-  "Binds `action` to specified `key` `state`. When key state changes to the one specified,
-action callback is invoked with no arguments. `#'bind-button` function should be called when
-there's active game exists started earlier with [`#'start`](#gamekit-start). `state` can be either
-`:pressed`, `:released` or `:repeating`.
-
-Actions are not stacked together and would be overwritten for the same key and state.
-
-Supported keys:
-```common_lisp
-  :space :apostrophe :comma :minus :period :slash
-  :0 :1 :2 :3 :4 :5 :6 :7 :8 :9
-  :semicolon :equal
-  :a :b :c :d :e :f :g :h :i :j :k :l :m
-  :n :o :p :q :r :s :t :u :v :w :x :y :z
-  :left-bracket :backslash :right-bracket
-  :grave-accent :world-1 :world-2
-  :escape :enter :tab :backspace :insert :delete
-  :right :left :down :up
-  :page-up :page-down :home :end
-  :caps-lock :scroll-lock :num-lock :print-screen :pause
-  :f1 :f2 :f3 :f4 :f5 :f6 :f7 :f8 :f9 :f10 :f11 :f12
-  :f13 :f14 :f15 :f16 :f17 :f18 :f19 :f20 :f21 :f22 :f23 :f24 :f25
-  :keypad-0 :keypad-1 :keypad-2 :keypad-3 :keypad-4
-  :keypad-5 :keypad-6 :keypad-7 :keypad-8 :keypad-9
-  :keypad-decimal :keypad-divide :keypad-multiply
-  :keypad-subtract :keypad-add :keypad-enter :keypad-equal
-  :left-shift :left-control :left-alt :left-super
-  :right-shift :right-control :right-alt :right-super
-  :menu
-
-  :mouse-left :mouse-right :mouse-middle
-```
-
-Example
-```common_lisp
-\(gamekit:bind-button :enter :pressed
-                     (lambda ()
-                       (start-game-for *player*)))
-```"
   (when-gamekit (gamekit)
     (with-slots (keymap) gamekit
       (with-system-lock-held (gamekit)
@@ -496,17 +352,6 @@ Example
 
 
 (defun bind-cursor (action)
-  "Binds action callback to a cursor movement event. Everytime user moves a cursor callback will
-be called with x and y of cursor coordinates within the same coordinate system canvas is defined
-in: bottom left corner as (0,0) origin and y-axis pointing upwards.
-
-Actions doesn't stack together and would be overwritten each time `#'bind-cursor` is called.
-
-Example:
-```common_lisp
-(gamekit:bind-cursor (lambda (x y)
-                       (shoot-to x y)))
-```"
   (let ((gamekit (gamekit)))
     (with-slots (cursor-action) gamekit
       (with-system-lock-held (gamekit)
@@ -514,14 +359,6 @@ Example:
 
 
 (defun play-sound (sound-id &key looped-p)
-  "Plays a sound defined earlier with [`define-sound`](#gamekit-define-sound). Pass `t` to
-`:looped-p` key to play sound in a loop.
-
-Example:
-```common_lisp
-(gamekit:play-sound 'example-package::blop
-                    :looped-p t)
-```"
   (let ((source (resource-by-id sound-id)))
     (when looped-p
       (setf (ge.snd:audio-looped-p source) t))
@@ -529,17 +366,10 @@ Example:
 
 
 (defun stop-sound (sound-id)
-  "Stops a playing sound by provided sound id.
-
-Example:
-```common_lisp
-(gamekit:stop-sound 'example-package::blop)
-```"
   (ge.snd:stop-audio (resource-by-id sound-id)))
 
 
 (defun play (sound-id &key looped-p)
-  "Deprecated. Use #'play-sound instead"
   (play-sound sound-id :looped-p looped-p))
 
 
@@ -563,31 +393,15 @@ Example:
 
 
 (defun make-font (font-id size)
-  "Makes a font instance that can be later passed to [`#'draw-text`](#gamekit-draw-text) to
-customize text looks. `font-id` must be a valid resource name previously registered with
-[`define-font`](#gamekit-define-font). Second argument is a font size in pixels.
-
-Example:
-```common_lisp
-(gamekit:make-font 'example-package::noto-sans 32)
-```"
   (ge.vg:make-font (resource-by-id font-id) :size size))
 
 
 (defun calc-text-bounds (text &optional (font *font*))
-  "Calculates text bounds with the font provided or the default one otherwise and returns
-several values: origin as vec2, width, height and calculated advance
-
-Example:
-```common_lisp
-\(gamekit:calc-text-bounds \"hello there\"\)
-```"
   (ge.vg:with-font (font)
    (ge.vg:canvas-text-bounds text)))
 
 
 (defun print-text (string x y &optional (color *black*))
-  "Deprecated. Use #'draw-text instead"
   (draw-text string (vec2 x y) :fill-color color))
 
 
@@ -606,16 +420,6 @@ Example:
                           viewport-resizable
                           (viewport-decorated t)
                           (autoscaled t))
-  "Bootsraps a game allocating a window and other system resources. Instantiates game object
-defined with [`defgame`](#gamekit-defgame) which can be obtained via
-[`#'gamekit`](#gamekit-gamekit). Cannot be called twice - [`#'stop`](#gamekit-stop) should be
-called first before running `start` again.
-
-Example:
-
-```common_lisp
-\(gamekit:start 'example\)
-```"
   (when *gamekit-instance-class*
     (error "Only one active system of type 'gamekit-system is allowed"))
   (setf *gamekit-instance-class* classname)
@@ -637,12 +441,6 @@ Example:
 
 
 (defun stop (&key blocking)
-  "Stops currently running game releasing acquired resources.
-
-Example:
-```common_lisp
-\(gamekit:stop\)
-```"
   (if blocking
       (%stop)
       (in-new-thread ("exit-thread")

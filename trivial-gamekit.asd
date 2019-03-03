@@ -7,10 +7,10 @@
   :depends-on (log4cl bodge-utilities cl-bodge/graphics cl-bodge/audio cl-bodge/host
                       cl-bodge/resources cl-bodge/canvas
                       uiop cl-muth cl-fad cl-muth)
+  :pathname "src/"
   :serial t
   :components ((:file "packages")
                (:file "resources")
-               (:file "sketch")
                (:file "gamekit")))
 
 
@@ -21,6 +21,7 @@
   :mailto "dev@borodust.org"
   :license "MIT"
   :depends-on (trivial-gamekit cl-bodge/distribution)
+  :pathname "distrib/"
   :serial t
   :components ((:file "distribution")))
 
@@ -31,6 +32,10 @@
   :author "Pavel Korolev"
   :mailto "dev@borodust.org"
   :license "MIT"
-  :depends-on (doxy alexandria cl-mustache trivial-gamekit trivial-gamekit/distribution)
+  :depends-on (doxy alexandria cl-mustache trivial-gamekit trivial-gamekit/distribution trivial-docstring)
+  :pathname "docs/"
   :serial t
-  :components ((:file "documentation")))
+  :components ((:file "packages")
+               (:file "bodge")
+               (:file "gamekit")
+               (:file "renderer")))
