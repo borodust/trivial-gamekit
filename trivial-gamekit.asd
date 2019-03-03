@@ -4,12 +4,18 @@
   :author "Pavel Korolev"
   :mailto "dev@borodust.org"
   :license "MIT"
-  :depends-on (log4cl bodge-utilities cl-bodge/graphics cl-bodge/audio cl-bodge/host
-                      cl-bodge/resources cl-bodge/canvas
+  :depends-on (log4cl bodge-utilities
+                      cl-bodge/graphics
+                      cl-bodge/audio
+                      cl-bodge/host
+                      cl-bodge/resources
+                      cl-bodge/canvas
+                      cl-bodge/appkit
                       uiop cl-muth cl-fad cl-muth)
   :pathname "src/"
   :serial t
   :components ((:file "packages")
+               (:file "utils")
                (:file "resources")
                (:file "gamekit")))
 

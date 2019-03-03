@@ -10,90 +10,58 @@
 (defvar *black* (vec4 0 0 0 1))
 
 
-(defclass gamekit-system (enableable generic-system)
+(defclass gamekit-system ()
   ((keymap :initform nil)
    (cursor-action :initform nil)
    (cursor-position :initform (vec2 0 0))
    (cursor-changed-p :initform nil)
    (resource-path :initarg :resource-path :initform nil)
    (resource-registry)
-   (viewport-width :initarg :viewport-width :initform 640)
-   (viewport-height :initarg :viewport-height :initform 480)
-   (viewport-scale :initform 1f0)
-   (framebuffer-size :initform (vec2 640 480) :accessor %framebuffer-size-of)
-   (fullscreen-p :initarg :fullscreen-p :initform nil)
-   (autoscaled :initform (property '(:host :autoscaled) t))
    (prepare-resources :initform t)
-   (viewport-title :initarg :viewport-title :initform "Trivial Gamekit")
-   (canvas :initform nil :reader canvas-of)
-   (font :initform nil :reader font-of)
-   (antialiased :initform (property '(:gamekit :antialiased) t))
-   (button-action :initform nil)
-   (action-queue :initform (make-task-queue)))
-  (:default-initargs :depends-on '(graphics-system audio-system)))
+   (button-action :initform nil)))
+
+
+(defmethod initialize-instance ((this gamekit-system) &rest args &key depends-on)
+  (apply #'call-next-method this
+         :depends-on (append (list 'ge.snd:audio-system) depends-on)
+         args))
 
 
 (defgeneric configure-game (game)
-  (:method ((this gamekit-system)) (declare (ignore this))))
+  (:method (this) (declare (ignore this))))
 
 
 (defun split-opts (opts)
   (loop for opt in opts
-     if (member (first opt) '(:viewport-width
-                              :viewport-height
-                              :viewport-title
-                              :fullscreen-p
-                              :prepare-resources))
-     collect opt into extended
-     else
-     collect opt into std
-     finally (return (values std extended))))
+        if (member (first opt) '(:prepare-resources))
+          collect opt into extended
+        else
+          collect opt into std
+        finally (return (values std extended))))
 
 
 (defmacro defgame (name (&rest classes) &body ((&rest slots) &rest opts))
   (multiple-value-bind (std-opts extended) (split-opts opts)
     `(progn
-       (defclass ,name (gamekit-system ,@classes)
+       (ge.app:defapp ,name (gamekit-system ,@classes)
          ,slots
          ,@std-opts)
-       ,(with-hash-entries ((viewport-width :viewport-width)
-                            (viewport-height :viewport-height)
-                            (viewport-title :viewport-title)
-                            (fullscreen-p :fullscreen-p)
-                            (prepare-resources :prepare-resources))
+       ,(with-hash-entries ((prepare-resources :prepare-resources))
                            (alist-hash-table extended)
           `(progn
              (defmethod configure-game ((this ,name))
-               ,@(when viewport-width
-                   `((setf (slot-value this 'viewport-width) ,@viewport-width)))
-               ,@(when viewport-height
-                   `((setf (slot-value this 'viewport-height) ,@viewport-height)))
-               ,@(when viewport-title
-                   `((setf (slot-value this 'viewport-title) ,@viewport-title)))
-               ,@(when fullscreen-p
-                   `((setf (slot-value this 'fullscreen-p) ,@fullscreen-p)))
+               (log/debug "Reconfiguring ~A" ',name)
                ,@(multiple-value-bind (value exist-p) prepare-resources
                    `((setf (slot-value this 'prepare-resources) ,(if exist-p
                                                                      (first value)
                                                                      t))))))))))
 
 
-(defmethod initialize-instance :around ((this gamekit-system) &key)
-  (when (null *gamekit-instance-class*)
-    (error "Manual gamekit instance creation forbidden. Use #'gamekit:start"))
-  (call-next-method))
-
-
 (defun gamekit ()
-  (when *gamekit-instance-class*
-    (ge.ng:engine-system *gamekit-instance-class*)))
+  (ge.app:app))
 
 
 (defgeneric act (system)
-  (:method (system) (declare (ignore system))))
-
-
-(defgeneric draw (system)
   (:method (system) (declare (ignore system))))
 
 
@@ -126,14 +94,6 @@
   (funcall next-method))
 
 
-(defmethod draw :around ((system gamekit-system))
-  (with-slots (canvas font framebuffer-size) system
-    (gl:viewport 0 0 (x framebuffer-size) (y framebuffer-size))
-    (gl:clear :color-buffer :depth-buffer :stencil-buffer)
-    (let ((*font* font))
-      (render t canvas :next-method #'call-next-method))))
-
-
 (defmethod initialize-resources :around ((system gamekit-system))
   (with-slots (resource-registry) system
     (let ((*resource-registry* resource-registry))
@@ -145,15 +105,20 @@
      ,@body))
 
 
-(define-event-handler on-keyboard-event ((ev keyboard-event) key state)
+(defmethod ge.app:draw :around ((this gamekit-system))
+  (let ((*font* (cl-bodge.canvas:make-default-font)))
+    (call-next-method)))
+
+
+(define-event-handler on-keyboard-event ((ev ge.host:keyboard-event) key state)
   (when-gamekit (gamekit)
-    (with-slots (keymap action-queue button-action) gamekit
+    (with-slots (keymap button-action) gamekit
       (when-let ((action (getf (gethash key keymap) state)))
-        (push-task action action-queue))
+        (push-action action))
       (when button-action
         (flet ((call-action ()
                  (funcall button-action key state)))
-          (push-task #'call-action action-queue))))))
+          (push-action #'call-action))))))
 
 
 (defun bodge-mouse-button->gamekit (bodge-button)
@@ -164,19 +129,19 @@
     (t bodge-button)))
 
 
-(define-event-handler on-mouse-event ((ev mouse-event) button state)
+(define-event-handler on-mouse-event ((ev ge.host:mouse-event) button state)
   (when-gamekit (gamekit)
-    (with-slots (keymap action-queue button-action) gamekit
+    (with-slots (keymap button-action) gamekit
       (when-let ((action (getf (gethash (bodge-mouse-button->gamekit button) keymap) state)))
-        (push-task action action-queue))
+        (push-action action))
       (when button-action
         (flet ((call-action ()
                  (funcall button-action (bodge-mouse-button->gamekit button)
                           state)))
-          (push-task #'call-action action-queue))))))
+          (push-action #'call-action))))))
 
 
-(define-event-handler on-cursor-event ((ev cursor-event) x y)
+(define-event-handler on-cursor-event ((ev ge.host:cursor-event) x y)
   (when-gamekit (gamekit)
     (with-slots (cursor-position cursor-changed-p) gamekit
       (unless cursor-changed-p
@@ -192,9 +157,9 @@
 
 
 (defun push-action (action)
-  (when-let ((gamekit (gamekit)))
-    (with-slots (action-queue) gamekit
-      (push-task action action-queue))))
+  (ge.app:inject-flow
+   (instantly ()
+     (funcall action))))
 
 
 (defgeneric notice-resources (game &rest resource-names)
@@ -203,47 +168,21 @@
     (log:info "Resources loaded: ~A" resource-names)))
 
 
+(defmethod ge.app:draw ((this gamekit-system))
+  (draw this))
+
+
 (defun prepare-resources (&rest resource-names)
   (log:trace "Preparing resources: ~A" resource-names)
   (let ((game (gamekit)))
-    (with-slots (canvas resource-registry) game
+    (with-slots (resource-registry) game
       (flet ((get-canvas ()
-               canvas)
+               (ge.app:app-canvas game))
              (notify-game ()
                (apply #'notice-resources game resource-names)))
-        (run (flow:>> (loading-flow resource-registry #'get-canvas resource-names)
+        (run (>> (loading-flow resource-registry #'get-canvas resource-names)
                  (instantly ()
                    (push-action #'notify-game))))))))
-
-
-(define-event-handler on-framebuffer-change ((ev framebuffer-size-change-event) width height)
-  (when-let ((gamekit (gamekit)))
-    (flet ((update-framebuffer ()
-             (setf (%framebuffer-size-of gamekit) (vec2 width height))))
-      (push-action #'update-framebuffer))))
-
-
-(defun update-viewport (gamekit w h scale)
-  (with-slots (viewport-width viewport-height viewport-scale
-               canvas pixel-ratio autoscaled)
-      gamekit
-    (let ((scale (if autoscaled scale 1f0)))
-      (setf viewport-scale scale
-            viewport-width (/ w scale)
-            viewport-height (/ h scale)))
-    (ge.vg:update-canvas-size canvas viewport-width viewport-height)
-    (ge.vg:update-canvas-pixel-ratio canvas (/ (x (%framebuffer-size-of gamekit))
-                                               viewport-width ))))
-
-
-(define-event-handler on-window-size-change ((ev viewport-size-change-event) width height)
-  (when-let ((gamekit (gamekit)))
-    (run
-     (for-host ()
-       (let* ((scale (viewport-scale)))
-         (flet ((%update-viewport ()
-                  (update-viewport gamekit width height scale)))
-           (push-action #'%update-viewport)))))))
 
 
 (defun %mount-for-executable (this)
@@ -255,81 +194,60 @@
       (when prepare-resources
         (apply #'%mount-resources (list-all-resources))))))
 
-(defun %initialize-host (this)
-  (with-slots (viewport-title viewport-width viewport-height fullscreen-p framebuffer-size) this
-    (let* ((vp-size (viewport-size))
-           (fb-size (framebuffer-size))
-           (pixel-ratio (/ (x fb-size) (x vp-size))))
-      (setf (viewport-title) viewport-title
-            (fullscreen-viewport-p) fullscreen-p
-            (viewport-size) (vec2 viewport-width viewport-height)
-            framebuffer-size (vec2 (* viewport-width pixel-ratio)
-                                   (* viewport-height pixel-ratio)))
-      (initialize-host this)
-      pixel-ratio)))
-
-(defun %initialize-graphics (this pixel-ratio)
-  (with-slots (viewport-width viewport-height canvas font antialiased) this
-    (setf canvas (ge.vg:make-canvas 'gamekit-canvas viewport-width
-                                    viewport-height
-                                    :pixel-ratio pixel-ratio
-                                    :antialiased antialiased))
-    (let ((font-face (ge.vg:register-font-face canvas
-                                               +font-name+
-                                               (load-resource +font-name+))))
-      (setf font (ge.vg:make-font font-face :size 32)))
-    (setf (swap-interval) 1)
-    (initialize-graphics this)))
 
 (defun %prepare-resources (this)
-  (with-slots (canvas resource-registry prepare-resources) this
-    (flet ((%get-canvas () canvas))
+  (with-slots (resource-registry prepare-resources) this
+    (flet ((%get-canvas ()
+             (ge.app:app-canvas this)))
       (when prepare-resources
         (loading-flow resource-registry #'%get-canvas (list-all-resources))))))
 
-(defun %game-loop (this)
-  (with-slots (action-queue cursor-position cursor-changed-p cursor-action
-               viewport-scale)
-      this
+
+(defmethod ge.app:acting-flow ((this gamekit-system))
+  (with-slots (cursor-position cursor-changed-p cursor-action) this
     (labels ((%process-cursor ()
                (when (and cursor-action cursor-changed-p)
-                 (funcall cursor-action
-                          (/ (x cursor-position) viewport-scale)
-                          (/ (y cursor-position) viewport-scale))
+                 (funcall cursor-action (x cursor-position) (y cursor-position))
                  (setf cursor-changed-p nil)))
              (%act ()
                (%process-cursor)
-               (drain action-queue)
-               (act this))
-             (%draw ()
-               (draw this)
-               (swap-buffers)))
-      (loop-flow (flow:>> (instantly () (%act))
-                     (for-graphics () (%draw)))
-         (lambda () (enabledp this))))))
+               (act this)))
+      (instantly () (%act)))))
 
-(defmethod initialize-system :after ((this gamekit-system))
+
+(defmethod ge.app:configuration-flow ((this gamekit-system))
   (with-slots (keymap resource-registry) this
-    (configure-game this)
-    (setf keymap (make-hash-table)
-          resource-registry (make-instance 'gamekit-resource-registry))
-    (initialize-resources this)
-    (%mount-for-executable this)))
+    (>> (instantly ()
+          (configure-game this)
+          (setf keymap (make-hash-table)
+                resource-registry (make-instance 'gamekit-resource-registry))
+          (initialize-resources this)
+          (%mount-for-executable this))
+        (ge.host:for-host ()
+          (log/debug "Initializing host")
+          (initialize-host this))
+        (ge.gx:for-graphics ()
+          (log/debug "Initializing graphics")
+          (initialize-graphics this))
+        (->> ()
+          (log/debug "Preparing resources")
+          (%prepare-resources this))
+        (instantly ()
+          (log/debug "Initializing audio")
+          (initialize-audio this)
+          (log/debug "Invoking post-initialization hook")
+          (post-initialize this)
+          (log/debug "Initialization completed")))))
 
-(defmethod enabling-flow list ((this gamekit-system))
-  (flow:>>
-   (for-host ()
-     (%initialize-host this))
-   (for-graphics (pixel-ratio)
-     (%initialize-graphics this pixel-ratio))
-   (flow:->> ()
-     (%prepare-resources this))
-   (instantly ()
-     (initialize-audio this)
-     (post-initialize this)
-     (run (flow:>> (%game-loop this)
-                   (instantly ()
-                     (pre-destroy this)))))))
+
+(defmethod ge.app:sweeping-flow ((this gamekit-system))
+  (with-slots (resource-registry) this
+    (instantly ()
+      (log/debug "Invoking pre-destroy hook")
+      (pre-destroy this)
+      (log/debug "Disposing resources")
+      (dispose-resources resource-registry)
+      (log/debug "Sweeping complete"))))
 
 
 (defun resource-by-id (id)
@@ -398,7 +316,7 @@
 
 (defun calc-text-bounds (text &optional (font *font*))
   (ge.vg:with-font (font)
-   (ge.vg:canvas-text-bounds text)))
+    (ge.vg:canvas-text-bounds text)))
 
 
 (defun print-text (string x y &optional (color *black*))
@@ -410,42 +328,20 @@
     (ge.vg:draw-text origin string fill-color)))
 
 
-;;;
-;;; Startup routines
-;;;
 (defun start (classname &key (log-level :info)
                           (opengl-version '(3 3))
                           samples
                           blocking
                           viewport-resizable
                           (viewport-decorated t)
-                          (autoscaled t))
-  (when *gamekit-instance-class*
-    (error "Only one active system of type 'gamekit-system is allowed"))
-  (setf *gamekit-instance-class* classname)
-  (startup `(:engine (:systems (,classname) :log-level ,log-level)
-             :host (:opengl-version ,opengl-version
-                    :samples ,samples
-                    :viewport-resizable ,viewport-resizable
-                    :viewport-decorated ,viewport-decorated
-                    :autoscaled ,autoscaled)
-             :gamekit (:antialiased ,(not samples)))
-           :blocking blocking))
-
-
-(defun %stop ()
-  (when *gamekit-instance-class*
-    (unwind-protect
-         (shutdown)
-      (setf *gamekit-instance-class* nil))))
-
-
-(defun stop (&key blocking)
-  (if blocking
-      (%stop)
-      (in-new-thread ("exit-thread")
-        (%stop))))
-
-
-(define-event-handler on-exit ((ev viewport-hiding-event))
-  (stop))
+                          (autoscaled t)
+                          properties)
+  (log/level log-level)
+  (ge.app:start classname :log-level log-level
+                          :opengl-version opengl-version
+                          :samples samples
+                          :blocking blocking
+                          :viewport-resizable viewport-resizable
+                          :viewport-decorated viewport-decorated
+                          :autoscaled autoscaled
+                          :properties properties))

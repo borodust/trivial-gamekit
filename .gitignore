@@ -14,5 +14,5 @@ local/
 # macOS junk
 **/.DS_Store
 
-# docs
-docs/
+# build
+build/
