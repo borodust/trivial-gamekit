@@ -44,21 +44,21 @@
            (source (ge.snd:make-audio-source)))
       (with-disposable ((buffer (ge.snd:make-audio-buffer sound)))
         (ge.snd:attach-audio-buffer buffer source))
-      source)))
+      (cons source t))))
 
 
 (defun %load-image (resource-name canvas-provider &key)
   (>> (concurrently ()
         (ge.rsc:load-resource resource-name))
       (ge.gx:for-graphics (image)
-        (ge.vg:make-image-paint (funcall canvas-provider) image))))
+        (cons (ge.vg:make-image-paint (funcall canvas-provider) image) t))))
 
 
 (defun %load-font (resource-name canvas-provider &key)
   (>> (concurrently ()
         (ge.rsc:load-resource resource-name))
       (ge.gx:for-graphics (font-face)
-        (ge.vg:register-font-face (funcall canvas-provider) resource-name font-face))))
+        (cons (ge.vg:register-font-face (funcall canvas-provider) resource-name font-face) nil))))
 
 
 (defun %load-resource (resource-name type canvas-provider)
@@ -79,16 +79,17 @@
                                     (type type)
                                     (resource-path (game-resource-path id)))
                            (>> (%load-resource resource-path type canvas-provider)
-                               (instantly (resource)
-                                 (cons id resource))))))
+                               (instantly ((resource . disposable-p))
+                                 (list id resource disposable-p))))))
      (concurrently ((results))
-       (loop for (id . resource) in results
-             do (setf (gethash id resources) resource))))))
+       (loop for (id resource disposable-p) in results
+             do (setf (gethash id resources) (cons resource disposable-p)))))))
 
 
 (defun dispose-resources (registry)
   (with-slots (resources) registry
-    (loop for resource being the hash-value of resources
+    (loop for (resource . disposable-p) being the hash-value of resources
+          when disposable-p
           do (dispose resource))))
 
 
@@ -99,7 +100,7 @@
 (defun %get-resource (loader id)
   (with-slots (resources) loader
     (if-let ((resource (gethash id resources)))
-      resource
+      (car resource)
       (error "Resource with id ~A not found" id))))
 
 
