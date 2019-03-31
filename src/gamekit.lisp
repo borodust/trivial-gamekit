@@ -168,10 +168,6 @@
     (log:info "Resources loaded: ~A" resource-names)))
 
 
-(defmethod ge.app:draw ((this gamekit-system))
-  (draw this))
-
-
 (defun prepare-resources (&rest resource-names)
   (log:trace "Preparing resources: ~A" resource-names)
   (let ((game (gamekit)))
