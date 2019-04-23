@@ -21,7 +21,7 @@
                                    :asset-containers '(("/_gamekit/" "gamekit.brf")
                                                        ("/_asset/" "assets.brf"))
                                    :epilogue (asdf:system-relative-pathname :trivial-gamekit
-                                                                            "epilogue.lisp")
+                                                                            "distrib/epilogue.lisp")
                                    :bindings (list
                                               (cons '*gamekit-game-class*
                                                     ``(,',game-class-package ,',game-class-name))))
