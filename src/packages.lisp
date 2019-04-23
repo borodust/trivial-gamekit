@@ -56,6 +56,8 @@
            bind-button
            bind-any-button
            bind-cursor
+           bind-controller
+           bind-any-controller
 
            draw-text
            draw-image

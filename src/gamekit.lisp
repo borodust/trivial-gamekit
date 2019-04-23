@@ -12,6 +12,7 @@
 
 (defclass gamekit-system ()
   ((keymap :initform nil)
+   (controller-map :initform nil)
    (cursor-action :initform nil)
    (cursor-position :initform (vec2 0 0))
    (cursor-changed-p :initform nil)
@@ -82,8 +83,7 @@
 
 
 (defgeneric post-initialize (system)
-  (:method (system)
-    (declare (ignore system))))
+  (:method (system) (declare (ignore system))))
 
 
 (defgeneric pre-destroy (system)
@@ -266,10 +266,18 @@
 
 
 (defun bind-cursor (action)
-  (let ((gamekit (gamekit)))
+  (when-gamekit (gamekit)
     (with-slots (cursor-action) gamekit
       (with-system-lock-held (gamekit)
         (setf cursor-action action)))))
+
+
+(defun bind-controller (controller-id control action)
+  (when-gamekit (gamekit)))
+
+
+(defun bind-any-controller (action)
+  (when-gamekit (gamekit)))
 
 
 (defun play-sound (sound-id &key looped-p)
