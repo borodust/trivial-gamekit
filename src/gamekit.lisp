@@ -105,6 +105,11 @@
      ,@body))
 
 
+(defmacro if-gamekit ((gamekit-var) &body body)
+  `(if-let ((,gamekit-var (gamekit)))
+     ,@body))
+
+
 (defmethod ge.app:draw :around ((this gamekit-system))
   (let ((*font* (cl-bodge.canvas:make-default-font)))
     (call-next-method)))
@@ -251,25 +256,32 @@
     (%get-resource resource-registry id)))
 
 
+(defun raise-binding-error ()
+  (error "Input can only be bound when gamekit is started."))
+
+
 (defun bind-button (key state action)
-  (when-gamekit (gamekit)
+  (if-gamekit (gamekit)
     (with-slots (keymap) gamekit
       (with-system-lock-held (gamekit)
-        (setf (getf (gethash key keymap) state) action)))))
+        (setf (getf (gethash key keymap) state) action)))
+    (raise-binding-error)))
 
 
 (defun bind-any-button (action)
-  (when-gamekit (gamekit)
+  (if-gamekit (gamekit)
     (with-slots (button-action) gamekit
       (with-system-lock-held (gamekit)
-        (setf button-action action)))))
+        (setf button-action action)))
+    (raise-binding-error)))
 
 
 (defun bind-cursor (action)
-  (let ((gamekit (gamekit)))
+  (if-gamekit (gamekit)
     (with-slots (cursor-action) gamekit
       (with-system-lock-held (gamekit)
-        (setf cursor-action action)))))
+        (setf cursor-action action)))
+    (raise-binding-error)))
 
 
 (defun play-sound (sound-id &key looped-p)
