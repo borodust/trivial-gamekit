@@ -53,6 +53,9 @@
            post-initialize
            pre-destroy
 
+           viewport-width
+           viewport-height
+
            bind-button
            bind-any-button
            bind-cursor

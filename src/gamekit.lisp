@@ -18,7 +18,9 @@
    (resource-path :initarg :resource-path :initform nil)
    (resource-registry)
    (prepare-resources :initform t)
-   (button-action :initform nil)))
+   (button-action :initform nil)
+   (viewport-width :initform 0)
+   (viewport-height :initform 0)))
 
 
 (defmethod initialize-instance ((this gamekit-system) &rest args &key depends-on)
@@ -110,6 +112,18 @@
      ,@body))
 
 
+(defun viewport-width ()
+  (when-gamekit (gamekit)
+    (with-slots (viewport-width) gamekit
+      viewport-width)))
+
+
+(defun viewport-height ()
+  (when-gamekit (gamekit)
+    (with-slots (viewport-height) gamekit
+      viewport-height)))
+
+
 (defmethod ge.app:draw :around ((this gamekit-system))
   (let ((*font* (cl-bodge.canvas:make-default-font)))
     (call-next-method)))
@@ -124,6 +138,14 @@
         (flet ((call-action ()
                  (funcall button-action key state)))
           (push-action #'call-action))))))
+
+
+(define-event-handler on-viewport-size-change ((ev ge.host:viewport-size-change-event)
+                                               width height)
+  (when-gamekit (gamekit)
+    (with-slots (viewport-width viewport-height) gamekit
+      (setf viewport-width width
+            viewport-height height))))
 
 
 (defun bodge-mouse-button->gamekit (bodge-button)
@@ -217,7 +239,7 @@
 
 
 (defmethod ge.app:configuration-flow ((this gamekit-system))
-  (with-slots (keymap resource-registry) this
+  (with-slots (keymap resource-registry viewport-width viewport-height) this
     (>> (instantly ()
           (configure-game this)
           (setf keymap (make-hash-table)
@@ -226,6 +248,9 @@
           (%mount-for-executable this))
         (ge.host:for-host ()
           (log/debug "Initializing host")
+          (ge.host:with-viewport-dimensions (width height)
+            (setf viewport-width width
+                  viewport-height height))
           (initialize-host this))
         (ge.gx:for-graphics ()
           (log/debug "Initializing graphics")

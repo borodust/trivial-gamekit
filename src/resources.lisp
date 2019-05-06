@@ -47,11 +47,13 @@
       (cons source t))))
 
 
-(defun %load-image (resource-name canvas-provider &key)
+(defun %load-image (resource-name canvas-provider &key use-nearest-interpolation)
   (>> (concurrently ()
         (ge.rsc:load-resource resource-name))
       (ge.gx:for-graphics (image)
-        (cons (ge.vg:make-image-paint (funcall canvas-provider) image) t))))
+        (cons (ge.vg:make-image-paint (funcall canvas-provider) image
+                                      :use-nearest-interpolation use-nearest-interpolation)
+              t))))
 
 
 (defun %load-font (resource-name canvas-provider &key)
@@ -61,9 +63,9 @@
         (cons (ge.vg:register-font-face (funcall canvas-provider) resource-name font-face) nil))))
 
 
-(defun %load-resource (resource-name type canvas-provider)
+(defun %load-resource (resource-name type canvas-provider parameters)
   (eswitch (type :test #'eq)
-    (:image (%load-image resource-name canvas-provider))
+    (:image (apply #'%load-image resource-name canvas-provider parameters))
     (:audio (%load-sound resource-name))
     (:font (%load-font resource-name canvas-provider))))
 
@@ -73,12 +75,15 @@
     (unless (ge.ng:executablep)
       (apply #'%mount-resources resource-names))
     (>>
-     (~> (loop for (id type) in *resources*
+     (~> (loop for (id type nil . parameters) in *resources*
                when (member id resource-names :test #'eq)
                  collect (when-let ((id id)
                                     (type type)
                                     (resource-path (game-resource-path id)))
-                           (>> (%load-resource resource-path type canvas-provider)
+                           (>> (%load-resource resource-path
+                                               type
+                                               canvas-provider
+                                               parameters)
                                (instantly ((resource . disposable-p))
                                  (list id resource disposable-p))))))
      (concurrently ((results))
@@ -135,12 +140,13 @@
     (prepare-resources resource-id)))
 
 
-(defun register-game-resource (id path &rest handler-args)
+(defun register-game-resource (id path parameters &rest handler-args)
   (check-type id symbol)
   (let ((resource-path (game-resource-path id)))
     (ge.rsc:register-resource resource-path
                               (apply #'ge.rsc:make-resource-handler handler-args))
-    (setf (assoc-value *resources* id) (list (first handler-args) path))))
+    (setf (assoc-value *resources* id) (append (list (first handler-args) path)
+                                               parameters))))
 
 
 (defun import-image (resource-id path)
@@ -151,22 +157,24 @@
   (register-game-resource resource-id path :audio))
 
 
-(defmacro define-image (name path)
+(defmacro define-image (name path &key use-nearest-interpolation)
   (once-only (name)
     `(progn
-       (register-game-resource ,name ,path :image :type :png)
+       (register-game-resource ,name ,path
+                               `(:use-nearest-interpolation ,,use-nearest-interpolation)
+                               :image :type :png)
        (autoprepare ,name))))
 
 
 (defmacro define-sound (name path)
   (once-only (name)
     `(progn
-       (register-game-resource ,name ,path :audio)
+       (register-game-resource ,name ,path () :audio)
        (autoprepare ,name))))
 
 
 (defmacro define-font (name path)
   (once-only (name)
     `(progn
-       (register-game-resource ,name ,path :font :type :ttf)
+       (register-game-resource ,name ,path () :font :type :ttf)
        (autoprepare ,name))))
