@@ -60,6 +60,9 @@
            draw-text
            draw-image
 
+           image-width
+           image-height
+
            translate-canvas
            rotate-canvas
            scale-canvas

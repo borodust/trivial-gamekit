@@ -306,6 +306,18 @@
         (draw-rect image-origin image-width image-height :fill-paint image)))))
 
 
+(defun image-width (image-id)
+  (if-let ((image (resource-by-id image-id)))
+    (ge.vg:image-paint-width image)
+    (error "Image ~A not found" image-id)))
+
+
+(defun image-height (image-id)
+  (if-let ((image (resource-by-id image-id)))
+    (ge.vg:image-paint-height image)
+    (error "Image ~A not found" image-id)))
+
+
 (defun make-font (font-id size)
   (ge.vg:make-font (resource-by-id font-id) :size size))
 
