@@ -25,7 +25,7 @@
 
 (defmethod initialize-instance ((this gamekit-system) &rest args &key depends-on)
   (apply #'call-next-method this
-         :depends-on (append (list 'ge.snd:audio-system) depends-on)
+         :depends-on (union (list 'ge.snd:audio-system) depends-on)
          args))
 
 
@@ -199,11 +199,9 @@
   (log:trace "Preparing resources: ~A" resource-names)
   (let ((game (gamekit)))
     (with-slots (resource-registry) game
-      (flet ((get-canvas ()
-               (ge.app:app-canvas game))
-             (notify-game ()
+      (flet ((notify-game ()
                (apply #'notice-resources game resource-names)))
-        (run (>> (loading-flow resource-registry #'get-canvas resource-names)
+        (run (>> (loading-flow resource-registry #'ge.app:app-canvas resource-names)
                  (instantly ()
                    (push-action #'notify-game))))))))
 
@@ -220,10 +218,8 @@
 
 (defun %prepare-resources (this)
   (with-slots (resource-registry prepare-resources) this
-    (flet ((%get-canvas ()
-             (ge.app:app-canvas this)))
-      (when prepare-resources
-        (loading-flow resource-registry #'%get-canvas (list-all-resources))))))
+    (when prepare-resources
+      (loading-flow resource-registry #'ge.app:app-canvas (list-all-resources)))))
 
 
 (defmethod ge.app:acting-flow ((this gamekit-system))
@@ -243,14 +239,16 @@
     (>> (instantly ()
           (configure-game this)
           (setf keymap (make-hash-table)
-                resource-registry (make-instance 'gamekit-resource-registry))
+                resource-registry (make-instance 'gamekit-resource-registry)))
+        (ge.host:for-host ()
+          (ge.host:with-viewport-dimensions (width height)
+            (setf viewport-width width
+                  viewport-height height)))
+        (instantly ()
           (initialize-resources this)
           (%mount-for-executable this))
         (ge.host:for-host ()
           (log/debug "Initializing host")
-          (ge.host:with-viewport-dimensions (width height)
-            (setf viewport-width width
-                  viewport-height height))
           (initialize-host this))
         (ge.gx:for-graphics ()
           (log/debug "Initializing graphics")
