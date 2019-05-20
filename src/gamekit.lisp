@@ -131,6 +131,21 @@
     (call-next-method)))
 
 
+(defun register-gamepad (gamekit gamepad)
+  (with-slots (gamepad-map gamepad-action) gamekit
+    (setf (gethash gamepad gamepad-map) (make-hash-table))
+    (when gamepad-action
+      (funcall gamepad-action gamepad :connected))))
+
+
+(defun remove-gamepad (gamekit gamepad)
+  (with-slots (gamepad-map gamepad-action) gamekit
+    (unwind-protect
+         (when gamepad-action
+           (funcall gamepad-action gamepad :disconnected))
+      (remhash gamepad gamepad-map))))
+
+
 (define-event-handler on-keyboard ((ev ge.host:keyboard-event) key state)
   (when-gamekit (gamekit)
     (with-slots (keymap button-action) gamekit
@@ -147,9 +162,7 @@
     (with-slots (gamepad-map gamepad-action) gamekit
       (let ((gamepad (ge.host:gamepad-from ev)))
         (flet ((%connect-gamepad ()
-                 (setf (gethash gamepad gamepad-map) (make-hash-table))
-                 (when gamepad-action
-                   (funcall gamepad-action gamepad :connected))))
+                 (register-gamepad gamekit gamepad)))
           (push-action #'%connect-gamepad))))))
 
 
@@ -158,10 +171,7 @@
     (with-slots (gamepad-map gamepad-action) gamekit
       (let ((gamepad (ge.host:gamepad-from ev)))
         (flet ((%disconnect-gamepad ()
-                 (unwind-protect
-                      (when gamepad-action
-                        (funcall gamepad-action gamepad :disconnected))
-                   (remhash gamepad gamepad-map))))
+                 (remove-gamepad gamekit gamepad)))
           (push-action #'%disconnect-gamepad))))))
 
 
@@ -341,6 +351,9 @@
         (->> ()
           (log/debug "Preparing resources")
           (%prepare-resources this))
+        (ge.host:for-host ()
+          (loop for gamepad in (ge.host:list-gamepads)
+                do (register-gamepad this gamepad)))
         (instantly ()
           (log/debug "Initializing audio")
           (initialize-audio this)
@@ -378,8 +391,12 @@
 
 (defun bind-any-gamepad (action)
   (if-gamekit (gamekit)
-    (with-slots (gamepad-action) gamekit
-      (setf gamepad-action action))
+    (with-slots (gamepad-action gamepad-map) gamekit
+      (setf gamepad-action action)
+      (flet ((register-gamepads ()
+               (loop for gamepad being the hash-key of gamepad-map
+                     do (funcall gamepad-action gamepad))))
+        (push-action #'register-gamepads)))
     (raise-binding-error)))
 
 
