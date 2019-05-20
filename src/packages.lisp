@@ -59,6 +59,11 @@
            bind-button
            bind-any-button
            bind-cursor
+           bind-any-gamepad
+           bind-gamepad-button
+           bind-gamepad-any-button
+           bind-gamepad-stick
+           bind-gamepad-trigger
 
            draw-text
            draw-image

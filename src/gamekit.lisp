@@ -12,6 +12,8 @@
 
 (defclass gamekit-system ()
   ((keymap :initform nil)
+   (gamepad-map :initform nil)
+   (gamepad-action :initform nil)
    (cursor-action :initform nil)
    (cursor-position :initform (vec2 0 0))
    (cursor-changed-p :initform nil)
@@ -129,7 +131,7 @@
     (call-next-method)))
 
 
-(define-event-handler on-keyboard-event ((ev ge.host:keyboard-event) key state)
+(define-event-handler on-keyboard ((ev ge.host:keyboard-event) key state)
   (when-gamekit (gamekit)
     (with-slots (keymap button-action) gamekit
       (when-let ((action (getf (gethash key keymap) state)))
@@ -138,6 +140,87 @@
         (flet ((call-action ()
                  (funcall button-action key state)))
           (push-action #'call-action))))))
+
+
+(define-event-handler on-gamepad-connect ((ev ge.host:gamepad-connected-event))
+  (when-gamekit (gamekit)
+    (with-slots (gamepad-map gamepad-action) gamekit
+      (let ((gamepad (ge.host:gamepad-from ev)))
+        (flet ((%connect-gamepad ()
+                 (setf (gethash gamepad gamepad-map) (make-hash-table))
+                 (when gamepad-action
+                   (funcall gamepad-action gamepad :connected))))
+          (push-action #'%connect-gamepad))))))
+
+
+(define-event-handler on-gamepad-disconnect ((ev ge.host:gamepad-disconnected-event))
+  (when-gamekit (gamekit)
+    (with-slots (gamepad-map gamepad-action) gamekit
+      (let ((gamepad (ge.host:gamepad-from ev)))
+        (flet ((%disconnect-gamepad ()
+                 (unwind-protect
+                      (when gamepad-action
+                        (funcall gamepad-action gamepad :disconnected))
+                   (remhash gamepad gamepad-map))))
+          (push-action #'%disconnect-gamepad))))))
+
+
+(define-event-handler on-gamepad-button ((ev ge.host:gamepad-button-event))
+  (when-gamekit (gamekit)
+    (with-slots (gamepad-map) gamekit
+      (let ((gamepad (ge.host:gamepad-from ev))
+            (button (ge.host:button-from ev))
+            (state (ge.host:state-from ev)))
+        (flet ((process-button ()
+                 (when-let ((action-map (gethash gamepad gamepad-map)))
+                   (when-let ((action (gethash :any action-map)))
+                     (funcall action button state))
+                   (when-let ((action (getf (gethash button action-map) state)))
+                     (funcall action)))))
+          (push-action #'process-button))))))
+
+
+(defun invoke-stick-action (gamekit event stick)
+  (with-slots (gamepad-map) gamekit
+    (let ((gamepad (ge.host:gamepad-from event))
+          (x (ge.host:x-from event))
+          (y (ge.host:y-from event)))
+      (flet ((process-stick ()
+               (when-let* ((action-map (gethash gamepad gamepad-map))
+                           (action (gethash stick action-map)))
+                 (funcall action x y))))
+        (push-action #'process-stick)))))
+
+
+(define-event-handler on-gamepad-left-stick ((ev ge.host:gamepad-left-stick-event))
+  (when-gamekit (gamekit)
+    (invoke-stick-action gamekit ev :left-stick)))
+
+
+(define-event-handler on-gamepad-right-stick ((ev ge.host:gamepad-right-stick-event))
+  (when-gamekit (gamekit)
+    (invoke-stick-action gamekit ev :right-stick)))
+
+
+(defun invoke-trigger-action (gamekit event trigger)
+  (with-slots (gamepad-map) gamekit
+    (let ((gamepad (ge.host:gamepad-from event))
+          (value (ge.host:value-from event)))
+      (flet ((process-trigger ()
+               (when-let* ((action-map (gethash gamepad gamepad-map))
+                           (action (gethash trigger action-map)))
+                 (funcall action value))))
+        (push-action #'process-trigger)))))
+
+
+(define-event-handler on-gamepad-left-trigger ((ev ge.host:gamepad-left-trigger-event))
+  (when-gamekit (gamekit)
+    (invoke-trigger-action gamekit ev :left-trigger)))
+
+
+(define-event-handler on-gamepad-right-trigger ((ev ge.host:gamepad-right-trigger-event))
+  (when-gamekit (gamekit)
+    (invoke-trigger-action gamekit ev :right-trigger)))
 
 
 (define-event-handler on-viewport-size-change ((ev ge.host:viewport-size-change-event)
@@ -156,10 +239,11 @@
     (t bodge-button)))
 
 
-(define-event-handler on-mouse-event ((ev ge.host:mouse-event) button state)
+(define-event-handler on-mouse ((ev ge.host:mouse-event) button state)
   (when-gamekit (gamekit)
     (with-slots (keymap button-action) gamekit
-      (when-let ((action (getf (gethash (bodge-mouse-button->gamekit button) keymap) state)))
+      (when-let ((action (getf (gethash (bodge-mouse-button->gamekit button) keymap)
+                               state)))
         (push-action action))
       (when button-action
         (flet ((call-action ()
@@ -168,7 +252,7 @@
           (push-action #'call-action))))))
 
 
-(define-event-handler on-cursor-event ((ev ge.host:cursor-event) x y)
+(define-event-handler on-cursor ((ev ge.host:cursor-event) x y)
   (when-gamekit (gamekit)
     (with-slots (cursor-position cursor-changed-p) gamekit
       (unless cursor-changed-p
@@ -235,10 +319,11 @@
 
 
 (defmethod ge.app:configuration-flow ((this gamekit-system))
-  (with-slots (keymap resource-registry viewport-width viewport-height) this
+  (with-slots (keymap gamepad-map resource-registry viewport-width viewport-height) this
     (>> (instantly ()
           (configure-game this)
           (setf keymap (make-hash-table)
+                gamepad-map (make-hash-table)
                 resource-registry (make-instance 'gamekit-resource-registry)))
         (ge.host:for-host ()
           (ge.host:with-viewport-dimensions (width height)
@@ -288,6 +373,51 @@
     (with-slots (keymap) gamekit
       (with-system-lock-held (gamekit)
         (setf (getf (gethash key keymap) state) action)))
+    (raise-binding-error)))
+
+
+(defun bind-any-gamepad (action)
+  (if-gamekit (gamekit)
+    (with-slots (gamepad-action) gamekit
+      (setf gamepad-action action))
+    (raise-binding-error)))
+
+
+(defun bind-gamepad-button (gamepad button state action)
+  (if-gamekit (gamekit)
+    (with-slots (gamepad-map) gamekit
+      (when-let ((action-map (gethash gamepad gamepad-map)))
+        (setf (getf (gethash button action-map) state) action)))
+    (raise-binding-error)))
+
+
+(defun bind-gamepad-any-button (gamepad action)
+  (if-gamekit (gamekit)
+    (with-slots (gamepad-map) gamekit
+      (when-let ((action-map (gethash gamepad gamepad-map)))
+        (setf (gethash :any action-map) action)))
+    (raise-binding-error)))
+
+
+(defun bind-gamepad-stick (gamepad stick action)
+  (if-gamekit (gamekit)
+    (with-slots (gamepad-map) gamekit
+      (when-let ((action-map (gethash gamepad gamepad-map)))
+        (let ((stick (ecase stick
+                       (:right :right-stick)
+                       (:left :left-stick))))
+          (setf (gethash stick action-map) action))))
+    (raise-binding-error)))
+
+
+(defun bind-gamepad-trigger (gamepad trigger action)
+  (if-gamekit (gamekit)
+    (with-slots (gamepad-map) gamekit
+      (when-let ((action-map (gethash gamepad gamepad-map)))
+        (let ((trigger (ecase trigger
+                         (:right :right-trigger)
+                         (:left :left-trigger))))
+          (setf (gethash trigger action-map) action))))
     (raise-binding-error)))
 
 
