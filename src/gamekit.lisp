@@ -393,10 +393,11 @@
   (if-gamekit (gamekit)
     (with-slots (gamepad-action gamepad-map) gamekit
       (setf gamepad-action action)
-      (flet ((register-gamepads ()
-               (loop for gamepad being the hash-key of gamepad-map
-                     do (funcall gamepad-action gamepad))))
-        (push-action #'register-gamepads)))
+      (when gamepad-action
+        (flet ((register-gamepads ()
+                 (loop for gamepad being the hash-key of gamepad-map
+                       do (funcall gamepad-action gamepad))))
+          (push-action #'register-gamepads))))
     (raise-binding-error)))
 
 
