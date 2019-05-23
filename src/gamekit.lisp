@@ -526,7 +526,7 @@
                           viewport-resizable
                           (viewport-decorated t)
                           (autoscaled t)
-                          (swap-interval 1)
+                          swap-interval
                           properties)
   (log/level log-level)
   (ge.app:start classname :log-level log-level
