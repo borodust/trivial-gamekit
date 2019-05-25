@@ -62,6 +62,7 @@
            bind-any-gamepad
            bind-gamepad-button
            bind-gamepad-any-button
+           bind-gamepad-dpad
            bind-gamepad-stick
            bind-gamepad-trigger
 

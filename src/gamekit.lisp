@@ -190,6 +190,18 @@
           (push-action #'process-button))))))
 
 
+(define-event-handler on-gamepad-dpad ((ev ge.host:gamepad-dpad-event))
+  (when-gamekit (gamekit)
+    (with-slots (gamepad-map) gamekit
+      (let ((gamepad (ge.host:gamepad-from ev))
+            (state (ge.host:state-from ev)))
+        (flet ((process-dpad ()
+                 (when-let ((action-map (gethash gamepad gamepad-map)))
+                   (when-let ((action (getf (gethash :dpad action-map) state)))
+                     (funcall action)))))
+          (push-action #'process-dpad))))))
+
+
 (defun invoke-stick-action (gamekit event stick)
   (with-slots (gamepad-map) gamekit
     (let ((gamepad (ge.host:gamepad-from event))
@@ -392,12 +404,13 @@
 (defun bind-any-gamepad (action)
   (if-gamekit (gamekit)
     (with-slots (gamepad-action gamepad-map) gamekit
-      (setf gamepad-action action)
-      (when gamepad-action
-        (flet ((register-gamepads ()
-                 (loop for gamepad being the hash-key of gamepad-map
-                       do (funcall gamepad-action gamepad))))
-          (push-action #'register-gamepads))))
+      (let ((new-action action))
+        (setf gamepad-action new-action)
+        (when new-action
+          (flet ((register-gamepads ()
+                   (loop for gamepad being the hash-key of gamepad-map
+                         do (funcall new-action gamepad :connected))))
+            (push-action #'register-gamepads)))))
     (raise-binding-error)))
 
 
@@ -406,6 +419,14 @@
     (with-slots (gamepad-map) gamekit
       (when-let ((action-map (gethash gamepad gamepad-map)))
         (setf (getf (gethash button action-map) state) action)))
+    (raise-binding-error)))
+
+
+(defun bind-gamepad-dpad (gamepad state action)
+  (if-gamekit (gamekit)
+    (with-slots (gamepad-map) gamekit
+      (when-let ((action-map (gethash gamepad gamepad-map)))
+        (setf (getf (gethash :dpad action-map) state) action)))
     (raise-binding-error)))
 
 
