@@ -135,8 +135,8 @@ Example:
 
 (docstring #'draw-text
   "Draws text on the canvas starting at coordinates passed as second argument.
-Use `:fill-color` key parameter to change text's color. To change a font, pass object created
-with [`#'make-font`](#gamekit-make-font) via `:font` parameter.
+Use `:fill-color` key parameter to change text's color. To change a font, pass
+object created with [`#'make-font`](#gamekit-make-font) via `:font` parameter.
 
 Example:
 ```common-lisp
@@ -146,9 +146,10 @@ Example:
 ```")
 
 (docstring #'draw-line
-  "Draws a line starting from coordinates passed as first argument to coordinates in second
-parameter. Third parameter is a color to draw a line with. `:thickness` is a scalar floating
-point value controlling pixel-width of a line.
+  "Draws a line starting from coordinates passed as first argument to
+coordinates in second parameter. Third parameter is a color to draw a line
+with. `:thickness` is a scalar floating point value controlling pixel-width of a
+line.
 
 Example:
 ```common-lisp
@@ -158,10 +159,10 @@ Example:
 ```")
 
 (docstring #'draw-curve
-  "Draws a bezier curve from coordinates passed as first argument to coordinates in second
-parameter with two control points in third and fourth parameters accordingly. Fifth argument is
-a curve's color. `:thickness` is a scalar floating point value controlling pixel-width of a
-curve.
+  "Draws a bezier curve from coordinates passed as first argument to coordinates
+in second parameter with two control points in third and fourth parameters
+accordingly. Fifth argument is a curve's color. `:thickness` is a scalar
+floating point value controlling pixel-width of a curve.
 
 Example:
 ```common-lisp
@@ -172,11 +173,11 @@ Example:
 ```")
 
 (docstring #'draw-rect
-  "Draws a rectangle with origin passed in first argument, width and height - second and third
-arguments accordingly. `:fill-paint` key is a color to fill insides of a rectangle with. If you
-pass color to `:stroke-paint`, edges of the rectangle are going to be struck with
-it. `:thickness` controls pixel width of struck edges. Use `:rounding` in pixels to round
-rectangle corners.
+  "Draws a rectangle with origin passed in first argument, width and height -
+second and third arguments accordingly. `:fill-paint` key is a color to fill
+insides of a rectangle with. If you pass color to `:stroke-paint`, edges of the
+rectangle are going to be struck with it. `:thickness` controls pixel width of
+struck edges. Use `:rounding` in pixels to round rectangle corners.
 
 Example:
 ```common-lisp
@@ -188,9 +189,9 @@ Example:
 
 (docstring #'draw-circle
   "Draws a circle with center in first argument and radius in second argument.
-Provide color with `:fill-paint` paramater to fill the inner area of the circle with. If
-`:stroke-paint` color is provided, circle's border is going to be struck with it. `:thickness`
-controls pixel width of struck border.
+Provide color with `:fill-paint` paramater to fill the inner area of the circle
+with. If `:stroke-paint` color is provided, circle's border is going to be
+struck with it. `:thickness` controls pixel width of struck border.
 
 Example:
 ```common-lisp
@@ -201,10 +202,11 @@ Example:
 ```")
 
 (docstring #'draw-ellipse
-  "Draws an ellipse with center provided in first argument, x and y radii as second and thrid
-arguments accordingly. Pass a color as `:fill-paint` paramater to fill the inner area of the
-ellipse with. If `:stroke-paint` color is provided, ellipse's border will be struck with
-it. `:thickness` controls pixel width of struck border.
+  "Draws an ellipse with center provided in first argument, x and y radii as
+second and thrid arguments accordingly. Pass a color as `:fill-paint` paramater
+to fill the inner area of the ellipse with. If `:stroke-paint` color is
+provided, ellipse's border will be struck with it. `:thickness` controls pixel
+width of struck border.
 
 Example:
 ```common-lisp
@@ -215,11 +217,11 @@ Example:
 ```")
 
 (docstring #'draw-arc
-  "Draws an arc from `a0` to `a1` angles (in radians) with center passed in first argument and
-radius in second. If provided, color in `:fill-paint` will be used to fill the area under an arc
-confined between a circle's curve and a line connecting angle points. `:fill-paint` and
-`:stroke-paint` colors are, if provided, used to fill insides and stroke arc's border
-correspondingly.
+  "Draws an arc from `a0` to `a1` angles (in radians) with center passed in
+first argument and radius in second. If provided, color in `:fill-paint` will be
+used to fill the area under an arc confined between a circle's curve and a line
+connecting angle points. `:fill-paint` and `:stroke-paint` colors are, if
+provided, used to fill insides and stroke arc's border correspondingly.
 
 Example:
 ```common-lisp
@@ -231,9 +233,10 @@ Example:
 ```")
 
 (docstring #'draw-polygon
-  "Draws a polygon connecting list of vertices provided in first argument. `:fill-paint` is
-a color to fill insides of a polygon and `:stroke-paint` color is used to stroke polygon
-edges. `:thickness` controls pixel-width of a stroke.
+  "Draws a polygon connecting list of vertices provided in first
+argument. `:fill-paint` is a color to fill insides of a polygon and
+`:stroke-paint` color is used to stroke polygon edges. `:thickness` controls
+pixel-width of a stroke.
 
 Example:
 ```common-lisp
@@ -245,8 +248,9 @@ Example:
 ```")
 
 (docstring #'draw-polyline
-  "Draws a polyline connecting list of vertices provided in first argument. Second argument is a
-color to stroke a line with. `:thickness` controls pixel width of a line.
+  "Draws a polyline connecting list of vertices provided in first
+argument. Second argument is a color to stroke a line with. `:thickness`
+controls pixel width of a line.
 
 Example:
 ```common-lisp
@@ -257,11 +261,12 @@ Example:
 ```")
 
 (docstring #'draw-image
-  "Draws an image at coordinates specified in first argument. Second argument is `image-id` used
-in [`#'define-image`](#gamekit-define-image) earlier. Optional `:origin` key is a point within
-image to start drawing from, if you want to render only a part of image. `:width` and `:height`
-keys tell width and height of a subimage to draw. They are optional and could be skipped to draw
-a subimage with full height and width available.
+  "Draws an image at coordinates specified in first argument. Second argument is
+`image-id` used in [`#'define-image`](#gamekit-define-image) earlier. Optional
+`:origin` key is a point within image to start drawing from, if you want to
+render only a part of image. `:width` and `:height` keys tell width and height
+of a subimage to draw. They are optional and could be skipped to draw a subimage
+with full height and width available.
 
 Example:
 ```common-lisp
@@ -272,9 +277,9 @@ Example:
 ```")
 
 (docstring #'translate-canvas
-  "Moves drawing origin to the specified position making the latter a new origin. All following
-draw operations will be affected by this change unless wrapped with
-[`with-pushed-canvas`](#gamekit-with-pushed-canvas) macro.
+  "Moves drawing origin to the specified position making the latter a new
+origin. All following draw operations will be affected by this change unless
+wrapped with [`with-pushed-canvas`](#gamekit-with-pushed-canvas) macro.
 
 Example:
 ```common-lisp
@@ -282,8 +287,8 @@ Example:
 ```")
 
 (docstring #'rotate-canvas
-  "Rotates current canvas for specified number of radians. All following drawing operations will
-be affected by this change unless wrapped with
+  "Rotates current canvas for specified number of radians. All following drawing
+operations will be affected by this change unless wrapped with
 [`with-pushed-canvas`](#gamekit-with-pushed-canvas) macro.
 
 Example:
@@ -292,23 +297,11 @@ Example:
 ```")
 
 (docstring #'scale-canvas
-  "Scales current canvas by x and y axes accordingly. All following drawing operations will be
-affected by this change unless wrapped with [`with-pushed-canvas`](#gamekit-with-pushed-canvas)
-macro.
+  "Scales current canvas by x and y axes accordingly. All following drawing
+operations will be affected by this change unless wrapped with
+[`with-pushed-canvas`](#gamekit-with-pushed-canvas) macro.
 
 Example:
 ```common-lisp
  (gamekit:scale-canvas 0.5 1.5)
-```")
-
-(docstring (macro-function 'with-pushed-canvas)
-  "Saves current canvas transformations (translations, rotations, scales) before entering its
-body and restores upon exist from the body. All transformation operations inside this macro
-don't affect outer canvas outside of a body of this macro.
-
-Example:
-```common-lisp
- (gamekit:translate-canvas 400 300)
- (gamekit:with-pushed-canvas ()
-   (gamekit:rotate-canvas (/ pi 4)))
 ```")

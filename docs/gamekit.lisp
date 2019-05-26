@@ -2,20 +2,21 @@
 
 
 (docstring (macro-function 'defgame)
-  "Defines a game class that can be passed to [`#'start`](#gamekit-start) to run a game. `name` is
-the name of a class generated. `classes` are names of superclasses, `slots` - standard class
-slots and `opts` are class options. So, pretty much standard class definition except it does
-configure a class in certain ways specifically for `gamekit` use and allows passing additional
-options in `opts` apart from standard `:documentation`, `:default-initargs` and so others.
+  "Defines a game class that can be passed to [`#'start`](#gamekit-start) to run
+a game. `name` is the name of a class generated. `classes` are names of
+superclasses, `slots` - standard class slots and `opts` are class options. So,
+pretty much standard class definition except it does configure a class in
+certain ways specifically for `gamekit` use and allows passing additional
+options in `opts` apart from standard `:documentation`, `:default-initargs` and
+so others.
 
 Additional options that can be passed in `opts` are:
 
 * `:viewport-width` - width of the window and canvas
 * `:viewport-height` - height of the window and canvas
 * `:viewport-title` - title of the window
-* `:prepare-resources` - boolean value that indicates whether `gamekit` should load resources
-automatically on startup or if not, user prefers to load them dynamically on request. Defaults
-to `t`.
+* `:prepare-resources` - boolean value that indicates whether `gamekit` should
+load resources automatically on startup or if not, user prefers to load them dynamically on request. Defaults to `t`.
 
 Example:
 
@@ -42,8 +43,9 @@ Example:
 
 
 (docstring #'act
-  "Called every game loop iteration for user to add any per-frame behavior to the game. NOTE:
-all drawing operations should be performed in [`#'draw`](#gamekit-draw) method.
+  "Called every game loop iteration for user to add any per-frame behavior to
+the game. NOTE: all drawing operations should be performed in
+[`#'draw`](#gamekit-draw) method.
 
 Example:
 ```common_lisp
@@ -64,10 +66,11 @@ Example:
 
 
 (docstring #'post-initialize
-  "This function is called after game instance is fully initialized, right before main game loop
-starts its execution. Put initialization code for your application into method of this
-function. For example, it would be logical to bind input via
-[`#'bind-cursor`](#gamekit-bind-cursor) or [`#'bind-button`](#gamekit-bind-button) here.
+  "This function is called after game instance is fully initialized, right
+before main game loop starts its execution. Put initialization code for your
+application into method of this function. For example, it would be logical to
+bind input via [`#'bind-cursor`](#gamekit-bind-cursor) or
+[`#'bind-button`](#gamekit-bind-button) here.
 
 Example:
 ```common_lisp
@@ -91,8 +94,8 @@ Example:
 
 (docstring #'notice-resources
   "Called when resource names earlier requested with
-[`#'prepare-resources`](#gamekit-prepare-resources) which indicates those resources are ready to
-be used.
+[`#'prepare-resources`](#gamekit-prepare-resources) which indicates those
+resources are ready to be used.
 
 Override this generic function to know when resources are ready.
 
@@ -106,18 +109,19 @@ Example:
 
 
 (docstring #'prepare-resources
-  "Loads and prepares resources for later usage asynchronously. `resource-names` should be
-symbols used previously registered with `define-*` macros.
+  "Loads and prepares resources for later usage asynchronously. `resource-names`
+should be symbols used previously registered with `define-*` macros.
 
 This function returns immediately. When resources are ready for use
-[`#'notice-resources`](#gamekit-notice-resources) will be called with names that were passed to
-this function.
+[`#'notice-resources`](#gamekit-notice-resources) will be called with names that
+were passed to this function.
 
-`gamekit` by default will try to load and prepare all registered resources on startup which
-might take a substantial time, but then you don't need to call #'prepare-resources yourself. If
-you prefer load resources on demand and have a faster startup time, pass nil to
-:prepare-resources option of a [`defgame`](#gamekit-defgame) macro which will disable startup
-resource autoloading.
+`gamekit` by default will try to load and prepare all registered resources on
+startup which might take a substantial time, but then you don't need to call
+#'prepare-resources yourself. If you prefer load resources on demand and have a
+faster startup time, pass nil to :prepare-resources option of a
+[`defgame`](#gamekit-defgame) macro which will disable startup resource
+autoloading.
 
 Example:
 ```common_lisp
@@ -129,9 +133,10 @@ Example:
 
 (docstring #'bind-button
   "Binds `action` to specified `key` `state`. When key state changes to the one specified,
-action callback is invoked with no arguments. `#'bind-button` function should be called when
-there's active game exists started earlier with [`#'start`](#gamekit-start). `state` can be either
-`:pressed`, `:released` or `:repeating`.
+action callback is invoked with no arguments. `#'bind-button` function should be
+called when there's active game exists started earlier with
+[`#'start`](#gamekit-start). `state` can be either `:pressed`, `:released` or
+`:repeating`.
 
 Actions are not stacked together and would be overwritten for the same key and state.
 
@@ -170,11 +175,13 @@ Example
 
 
 (docstring #'bind-cursor
-  "Binds action callback to a cursor movement event. Everytime user moves a cursor callback will
-be called with x and y of cursor coordinates within the same coordinate system canvas is defined
-in: bottom left corner as (0,0) origin and y-axis pointing upwards.
+  "Binds action callback to a cursor movement event. Everytime user moves a
+cursor callback will be called with x and y of cursor coordinates within the
+same coordinate system canvas is defined in: bottom left corner as (0,0) origin
+and y-axis pointing upwards.
 
-Actions doesn't stack together and would be overwritten each time `#'bind-cursor` is called.
+Actions doesn't stack together and would be overwritten each time
+`#'bind-cursor` is called.
 
 Example:
 ```common_lisp
@@ -233,10 +240,10 @@ Example:
 
 
 (docstring #'start
-  "Bootsraps a game allocating a window and other system resources. Instantiates game object
-defined with [`defgame`](#gamekit-defgame) which can be obtained via
-[`#'gamekit`](#gamekit-gamekit). Cannot be called twice - [`#'stop`](#gamekit-stop) should be
-called first before running `start` again.
+  "Bootsraps a game allocating a window and other system resources. Instantiates
+game object defined with [`defgame`](#gamekit-defgame) which can be obtained via
+[`#'gamekit`](#gamekit-gamekit). Cannot be called twice -
+[`#'stop`](#gamekit-stop) should be called first before running `start` again.
 
 Example:
 
@@ -255,12 +262,13 @@ Example:
 
 
 (docstring #'register-resource-package
-  "Associates resource package with filesystem path. For proper resource handling it is
-recommended to put it as a top-level form, so resources could be located at load-time.
+  "Associates resource package with filesystem path. For proper resource
+handling it is recommended to put it as a top-level form, so resources could be
+located at load-time.
 
-First argument, a package name, must be a valid Common Lisp package name that could be used to
-locate package via #'find-package. Second argument is a filesystem path to a directory where
-resources can be found.
+First argument, a package name, must be a valid Common Lisp package name that
+could be used to locate package via #'find-package. Second argument is a
+filesystem path to a directory where resources can be found.
 
 Example:
 ```common_lisp
@@ -270,13 +278,14 @@ Example:
 
 
 (docstring (macro-function 'define-image)
-  "Registers image resource by name that can be used by [`#'draw-image`](#gamekit-draw-image)
-later. Second argument is a valid path to the resource.  Only .png images are supported at this
-moment.
+  "Registers image resource by name that can be used by
+[`#'draw-image`](#gamekit-draw-image) later. Second argument is a valid path to
+the resource.  Only .png images are supported at this moment.
 
 Name must be a symbol. Package of that symbol and its associated path (via
-[`#'register-resource-package`](#gamekit-register-resource-package)) will be used to locate the
-resource, if relative path is given as an argument to this macro.
+[`#'register-resource-package`](#gamekit-register-resource-package)) will be
+used to locate the resource, if relative path is given as an argument to this
+macro.
 
 Example:
 ```common_lisp
@@ -286,12 +295,13 @@ Example:
 
 (docstring (macro-function 'define-sound)
   "Registers sound resource by name that can be used by [`#'play-sound`](#gamekit-play-sound) later.
-Second argument is a valid path to the resource.  Formats supported: .wav, .ogg (Vorbis), .flac,
-.aiff.
+Second argument is a valid path to the resource.  Formats supported: .wav,
+.ogg (Vorbis), .flac, .aiff.
 
 Name must be a symbol. Package of that symbol and its associated path (via
-[`#'register-resource-package`](#gamekit-register-resource-package)) will be used to locate the
-resource, if relative path is given as an argument to this macro.
+[`#'register-resource-package`](#gamekit-register-resource-package)) will be
+used to locate the resource, if relative path is given as an argument to this
+macro.
 
 Example:
 ```common_lisp
@@ -301,11 +311,13 @@ Example:
 
 (docstring (macro-function 'define-font)
   "Registers font resource by name that can be passed to [`#'make-font`](#gamekit-make-font) later.
-Second argument is a valid path to the resource. Only .ttf format is supported at this moment.
+Second argument is a valid path to the resource. Only .ttf format is supported
+at this moment.
 
 Name must be a symbol. Package of that symbol and its associated path (via
-[`#'register-resource-package`](#gamekit-register-resource-package)) will be used to locate the
-resource, if relative path is given as an argument to this macro.
+[`#'register-resource-package`](#gamekit-register-resource-package)) will be
+used to locate the resource, if relative path is given as an argument to this
+macro.
 
 Example:
 ```common_lisp
@@ -313,18 +325,84 @@ Example:
 ```")
 
 
-(docstring #'deliver
-  "Builds an executable, serializes resources and packs required foreign libraries into a .zip
-archive for distribution. `system-name` is a name of `asdf` system of your application and
-`game-class` is a game class defined with [`defgame`](#gamekit-defgame) (the one that could be
-passed to [`#'start`](#gamekit-start) to start your game). By default, it builds all artifacts
-into `build/` directory relative to `system-name` system path, but you can pass any other path
-to `:build-directory` key argument to put target files into it instead.
+(docstring (macro-function 'define-text)
+  "Registers text resource by name that can be retrieved with [`#'get-text`](#gamekit-get-text) later.
+Second argument is a valid path to the resource. You can specify encoding via
+`:encoding` keywrod argument. `:utf-8` is used by default.
 
-This routine uses `zip` and `lisp` ('sbcl' [Steel Bank Common Lisp](http://sbcl.org) is the
-default) to build a distributable package on various platforms. If those executables are not on
-your system's `PATH`, you would need to provide absolute paths to them via `:zip` and `:lisp`
-key arguments accordingly.
+Name must be a symbol. Package of that symbol and its associated path (via
+[`#'register-resource-package`](#gamekit-register-resource-package)) will be
+used to locate the resource, if relative path is given as an argument to this
+macro.
+
+Example:
+```common_lisp
+ (gamekit:define-text 'example-package::example-text \"dialog.txt\" :encoding :utf-8)
+```")
+
+
+(docstring (macro-function 'define-binary)
+  "Registers binary resource by name that can be retrieved with [`#'get-binary`](#gamekit-get-binary) later.
+Second argument is a valid path to the resource.
+
+Name must be a symbol. Package of that symbol and its associated path (via
+[`#'register-resource-package`](#gamekit-register-resource-package)) will be
+used to locate the resource, if relative path is given as an argument to this
+macro.
+
+Example:
+```common_lisp
+ (gamekit:define-binary 'example-package::example-blob \"blob.data\")
+```")
+
+
+(docstring (macro-function 'with-pushed-canvas)
+  "Saves current canvas transformations (translations, rotations, scales) before
+entering its body and restores previous transformations upon exit from the
+body. All transformation operations within this macro don't affect outer canvas
+transformations outside of a body of this macro.
+
+Example:
+```common-lisp
+ (gamekit:translate-canvas 400 300)
+ (gamekit:with-pushed-canvas ()
+   (gamekit:rotate-canvas (/ pi 4)))
+```")
+
+
+(docstring #'get-text
+  "Get text resource (a string) by id. `resource-id` must be a valid resource id
+previously registered with `['define-text](#gamekit-define-text)`.
+
+```common-lisp
+ (gamekit:get-text 'example-package::example-text)
+```")
+
+
+(docstring #'get-binary
+  "Get binary resource (a byte vector) by id. `resource-id` must be a valid
+resource id previously registered with `['define-binary](#gamekit-define-binary)`.
+
+```common-lisp
+ (gamekit:get-binary 'example-package::example-blob)
+```")
+
+
+(docstring #'deliver
+  "Builds an executable, serializes resources and packs required foreign
+libraries into a .zip archive for distribution. `system-name` is a name of
+`asdf` system of your application and `game-class` is a game class defined with
+[`defgame`](#gamekit-defgame) (the one that could be passed to
+[`#'start`](#gamekit-start) to start your game). By default, it builds all
+artifacts into `build/` directory relative to `system-name` system path, but you
+can pass any other path to `:build-directory` key argument to put target files
+into it instead.
+
+This routine uses `zip` and `lisp` ('sbcl' [Steel Bank Common
+Lisp](http://sbcl.org) is the default) to build a distributable package on
+various platforms. If those executables are not on your system's `PATH`, you
+would need to provide absolute paths to them via `:zip` and `:lisp` key
+arguments accordingly.
 
 You can load this function into an image via `:trivial-gamekit/distribution` system.
 
