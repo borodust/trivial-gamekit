@@ -20,7 +20,7 @@ load resources automatically on startup or if not, user prefers to load them dyn
 
 Example:
 
-```common_lisp
+```common-lisp
 \(gamekit:defgame example ()
   ;; some game related state
   ((world :initform (make-instance 'world))
@@ -37,7 +37,7 @@ Example:
   "Returns instance of a running game or `nil` if no game is started yet.
 
 Example:
-```common_lisp
+```common-lisp
  (gamekit:gamekit)
 ```")
 
@@ -48,7 +48,7 @@ the game. NOTE: all drawing operations should be performed in
 [`#'draw`](#gamekit-draw) method.
 
 Example:
-```common_lisp
+```common-lisp
  (defmethod gamekit:act ((this example))
    (report-fps))
 ```")
@@ -59,7 +59,7 @@ Example:
 All drawing operations should be performed in this method.
 
 Example:
-```common_lisp
+```common-lisp
  (defmethod gamekit:draw ((this example))
    (gamekit:draw-text \"Hello, Gamedev!\" (gamekit:vec2 10 10)))
 ```")
@@ -73,7 +73,7 @@ bind input via [`#'bind-cursor`](#gamekit-bind-cursor) or
 [`#'bind-button`](#gamekit-bind-button) here.
 
 Example:
-```common_lisp
+```common-lisp
 \(defmethod gamekit:post-initialize ((this example))
   (init-game)
   (bind-input))
@@ -85,7 +85,7 @@ Example:
 free all acquired resources and do any other clean up procedures.
 
 Example:
-```common_lisp
+```common-lisp
  (defmethod gamekit:pre-destroy ((this example))
    (release-foreign-memory)
    (stop-threads))
@@ -100,7 +100,7 @@ resources are ready to be used.
 Override this generic function to know when resources are ready.
 
 Example:
-```common_lisp
+```common-lisp
  (defmethod gamekit:notice-resources ((this example) &rest resource-names)
    (declare (ignore resource-names))
    (gamekit:play-sound 'example-package::blop)
@@ -124,7 +124,7 @@ faster startup time, pass nil to :prepare-resources option of a
 autoloading.
 
 Example:
-```common_lisp
+```common-lisp
  (gamekit:prepare-resources 'example-package::noto-sans
                             'example-package::blop
                             'example-package::logo)
@@ -143,7 +143,7 @@ Actions are not stacked together and would be overwritten for the same key and s
 Can only be called when gamekit instance is active (started).
 
 Supported keys:
-```common_lisp
+```common-lisp
   :space :apostrophe :comma :minus :period :slash
   :0 :1 :2 :3 :4 :5 :6 :7 :8 :9
   :semicolon :equal
@@ -169,7 +169,7 @@ Supported keys:
 ```
 
 Example
-```common_lisp
+```common-lisp
 \(gamekit:bind-button :enter :pressed
                      (lambda ()
                        (start-game-for *player*)))
@@ -192,7 +192,7 @@ overwritten each time the function is called.
 
 
 Example
-```common_lisp
+```common-lisp
  (gamekit:bind-any-button (lambda (button state)
                             (when (and (eq button :space) (eq state :pressed))
                               (shoot *player*))))
@@ -211,7 +211,7 @@ Actions doesn't stack together and would be overwritten each time
 Can only be called when gamekit instance is active (started).
 
 Example:
-```common_lisp
+```common-lisp
  (gamekit:bind-cursor (lambda (x y)
                         (shoot-to x y)))
 ```")
@@ -222,7 +222,7 @@ Example:
 `:looped-p` key to play sound in a loop.
 
 Example:
-```common_lisp
+```common-lisp
  (gamekit:play-sound 'example-package::blop
                      :looped-p t)
 ```")
@@ -232,7 +232,7 @@ Example:
   "Stops a playing sound by provided sound id.
 
 Example:
-```common_lisp
+```common-lisp
  (gamekit:stop-sound 'example-package::blop)
 ```")
 
@@ -247,7 +247,7 @@ customize text looks. `font-id` must be a valid resource name previously registe
 [`define-font`](#gamekit-define-font). Second argument is a font size in pixels.
 
 Example:
-```common_lisp
+```common-lisp
  (gamekit:make-font 'example-package::noto-sans 32)
 ```")
 
@@ -257,7 +257,7 @@ Example:
 several values: origin as vec2, width, height and calculated advance
 
 Example:
-```common_lisp
+```common-lisp
 \(gamekit:calc-text-bounds \"hello there\"\)
 ```")
 
@@ -274,7 +274,7 @@ game object defined with [`defgame`](#gamekit-defgame) which can be obtained via
 
 Example:
 
-```common_lisp
+```common-lisp
 \(gamekit:start 'example\)
 ```")
 
@@ -283,7 +283,7 @@ Example:
   "Stops currently running game releasing acquired resources.
 
 Example:
-```common_lisp
+```common-lisp
 \(gamekit:stop\)
 ```")
 
@@ -298,7 +298,7 @@ could be used to locate package via #'find-package. Second argument is a
 filesystem path to a directory where resources can be found.
 
 Example:
-```common_lisp
+```common-lisp
  (gamekit:register-resource-package :example-package
                                     \"/home/gamdev/example-game/assets/\")
 ```")
@@ -315,7 +315,7 @@ used to locate the resource, if relative path is given as an argument to this
 macro.
 
 Example:
-```common_lisp
+```common-lisp
  (gamekit:define-image 'example-package::logo \"images/logo.png\")
 ```")
 
@@ -331,7 +331,7 @@ used to locate the resource, if relative path is given as an argument to this
 macro.
 
 Example:
-```common_lisp
+```common-lisp
  (gamekit:define-sound 'example-package::blop \"sounds/blop.ogg\")
 ```")
 
@@ -347,7 +347,7 @@ used to locate the resource, if relative path is given as an argument to this
 macro.
 
 Example:
-```common_lisp
+```common-lisp
  (gamekit:define-font 'example-package::noto-sans \"fonts/NotoSans-Regular.ttf\")
 ```")
 
@@ -363,7 +363,7 @@ used to locate the resource, if relative path is given as an argument to this
 macro.
 
 Example:
-```common_lisp
+```common-lisp
  (gamekit:define-text 'example-package::example-text \"dialog.txt\" :encoding :utf-8)
 ```")
 
@@ -378,7 +378,7 @@ used to locate the resource, if relative path is given as an argument to this
 macro.
 
 Example:
-```common_lisp
+```common-lisp
  (gamekit:define-binary 'example-package::example-blob \"blob.data\")
 ```")
 
@@ -434,7 +434,7 @@ arguments accordingly.
 You can load this function into an image via `:trivial-gamekit/distribution` system.
 
 Example:
-```common_lisp
+```common-lisp
 \(ql:quickload :trivial-gamekit/distribution)
 \(gamekit.distribution:deliver :example-asdf-system 'example-package::example
                               :build-directory \"/tmp/example-game/\"
@@ -449,7 +449,7 @@ instance (started via [`#'start`](#gamekit-start)) or nil otherwise.
 
 Example:
 
-```common_lisp
+```common-lisp
   (gamekit:viewport-width)
 ```")
 
@@ -460,7 +460,7 @@ instance (started via [`#'start`](#gamekit-start)) or nil otherwise.
 
 Example:
 
-```common_lisp
+```common-lisp
   (gamekit:viewport-height)
 ```")
 
@@ -473,7 +473,7 @@ Can only be called when gamekit instance is active (started via
 [`#'start`](#gamekit-start)).
 
 Example:
-```common_lisp
+```common-lisp
  (gamekit:image-width 'example-package::logo)
 ```")
 
@@ -486,7 +486,7 @@ Can only be called when gamekit instance is active (started via
 [`#'start`](#gamekit-start)).
 
 Example:
-```common_lisp
+```common-lisp
  (gamekit:image-height 'example-package::logo)
 ```")
 
@@ -502,7 +502,7 @@ If there were gamepads already connected before call to `#'bind-any-gamepad`,
 `action` is called for each one of those upon invocation.
 
 Example:
-```common_lisp
+```common-lisp
  (gamekit:bind-any-gamepad (lambda (gamepad state)
                              (if (eq :connected state)
                                  (add-player-for-gamepad gamepad)
@@ -522,7 +522,7 @@ Can only be called when gamekit instance is active (started via
 Gamekit's gamepad is a generic xbox controller with the same layout of controls.
 
 Supported buttons:
-```common_lisp
+```common-lisp
   :a :b :x :y
   :left-bumper :right-bumper
   :start :back :guide
@@ -530,7 +530,7 @@ Supported buttons:
 ```
 
 Example
-```common_lisp
+```common-lisp
  (gamekit:bind-gamepad-button :start :pressed
                               (lambda (gamepad)
                                 (declare (ignore gamepad))
@@ -551,7 +551,7 @@ Can only be called when gamekit instance is active (started via
 [`#'start`](#gamekit-start)).
 
 Example
-```common_lisp
+```common-lisp
  (gamekit:bind-gamepad-any-button (lambda (gamepad button state)
                                     (when (and (eq button :start) (eq state :pressed))
                                       (join-party (make-player-for-gamepad gamepad)))))
@@ -564,7 +564,7 @@ invoked with gamepad opaque reference as a first argument and new dpad state as 
 second.
 
 Dpad states:
-```common_lisp
+```common-lisp
   :up :down :left :right
   :left-up :left-down
   :right-up :right-down
@@ -578,7 +578,7 @@ Can only be called when gamekit instance is active (started via
 [`#'start`](#gamekit-start)).
 
 Example
-```common_lisp
+```common-lisp
  (gamekit:bind-gamepad-state :up (lambda (gamepad)
                                    (declare (ignore gamepad))
                                    (jump *player*)))
@@ -599,7 +599,7 @@ Can only be called when gamekit instance is active (started via
 [`#'start`](#gamekit-start)).
 
 Example
-```common_lisp
+```common-lisp
  (gamekit:bind-gamepad-stick :left (lambda (gamepad x y)
                                      (declare (ignore gamepad))
                                      (move-player *player* x y)))
@@ -619,7 +619,7 @@ Can only be called when gamekit instance is active (started via
 [`#'start`](#gamekit-start)).
 
 Example
-```common_lisp
+```common-lisp
  (gamekit:bind-gamepad-trigger :right (lambda (gamepad value)
                                         (declare (ignore gamepad))
                                         (setf (shot-power *player*) value)))

@@ -67,7 +67,9 @@
                             'post-initialize
                             'pre-destroy
                             'act
-                            'draw)
+                            'draw
+                            'viewport-width
+                            'viewport-height)
      (%render-documentation "math.md"
                             'vec2
                             'vec3
@@ -85,9 +87,13 @@
                             'define-image
                             'define-sound
                             'define-font
+                            'define-text
+                            'define-binary
                             'make-font
                             'prepare-resources
-                            'notice-resources)
+                            'notice-resources
+                            'get-text
+                            'get-binary)
      (%render-documentation "drawing.md"
                             'draw-line
                             'draw-curve
@@ -102,13 +108,22 @@
                             'translate-canvas
                             'rotate-canvas
                             'scale-canvas
-                            'with-pushed-canvas)
+                            'with-pushed-canvas
+                            'image-width
+                            'image-height
+                            'calc-text-bounds)
      (%render-documentation "playing-an-audio.md"
                             'play-sound
                             'stop-sound)
      (%render-documentation "listening-to-input.md"
                             'bind-button
-                            'bind-cursor)
+                            'bind-cursor
+                            'bind-any-gamepad
+                            'bind-gamepad-button
+                            'bind-gamepad-any-button
+                            'bind-gamepad-dpad
+                            'bind-gamepad-stick
+                            'bind-gamepad-trigger)
      (%render-documentation "building-a-distributable.md"
                             'deliver))))
 
