@@ -492,14 +492,14 @@ Example:
 
 
 (docstring #'bind-any-gamepad
-  "Binds `action` to gamepad connection and disconnection events. Once one of
+  "Binds `action` to a gamepad connection and disconnection events. Once one of
 those events happen, `action` is called with two arguments: `gamepad` - opaque
 reference to a gamepad that will be supplied as an argument to other
 gamepad-related actions, and `state` - which can be either `:connected` or
 `:disconnected` to catch connection and disconnection of a gamepad accordingly.
 
 If there were gamepads already connected before call to `#'bind-any-gamepad`,
-`action` is called for each one upon invocation.
+`action` is called for each one of those upon invocation.
 
 Example:
 ```common_lisp
@@ -507,4 +507,33 @@ Example:
                              (if (eq :connected state)
                                  (add-player-for-gamepad gamepad)
                                  (pause-game-and-wait-for-player gamepad))))
+```")
+
+(docstring #'bind-gamepad-button
+  "Binds `action` to specified gamepad's `button` `state`.  When button state
+changes to the one specified, action callback is invoked with gamepad opaque
+reference as an argument. `state` can be either `:pressed` or `:released`.
+
+Actions are not stacked together and would be overwritten for the same gamepad,
+key and state.
+
+Can only be called when gamekit instance is active (started via
+[`#'start`](#gamekit-start)).
+
+Gamekit's gamepad is a generic xbox controller with the same layout of controls.
+
+Supported buttons:
+```common_lisp
+  :a :b :x :y
+  :left-bumper :right-bumper
+  :start :back :guide
+  :left-thumb :right-thumb
+```
+
+Example
+```common_lisp
+ (gamekit:bind-gamepad-button *gamepad* :start :pressed
+                              (lambda (gamepad)
+                                (declare (ignore gamepad))
+                                (start-game)))
 ```")
