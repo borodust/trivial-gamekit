@@ -540,6 +540,14 @@
     (ge.vg:draw-text origin string fill-color)))
 
 
+(defun get-text (resource-id)
+  (resource-by-id resource-id))
+
+
+(defun get-binary (resource-id)
+  (resource-by-id resource-id))
+
+
 (defun start (classname &key (log-level :info)
                           (opengl-version '(3 3))
                           samples

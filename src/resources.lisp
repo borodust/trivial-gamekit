@@ -67,7 +67,11 @@
   (eswitch (type :test #'eq)
     (:image (apply #'%load-image resource-name canvas-provider parameters))
     (:audio (%load-sound resource-name))
-    (:font (%load-font resource-name canvas-provider))))
+    (:font (%load-font resource-name canvas-provider))
+    (:text (instantly ()
+             (cons (ge.rsc:load-resource resource-name) nil)))
+    (:binary (instantly ()
+               (cons (ge.rsc:load-resource resource-name) nil)))))
 
 
 (defun loading-flow (loader canvas-provider resource-names)
@@ -177,4 +181,19 @@
   (once-only (name)
     `(progn
        (register-game-resource ,name ,path () :font :type :ttf)
+       (autoprepare ,name))))
+
+
+(defmacro define-text (name path &key encoding)
+  (once-only (name)
+    `(progn
+       (register-game-resource ,name ,path ()
+                               :text :encoding ,encoding)
+       (autoprepare ,name))))
+
+
+(defmacro define-binary (name path)
+  (once-only (name)
+    `(progn
+       (register-game-resource ,name ,path () :binary)
        (autoprepare ,name))))

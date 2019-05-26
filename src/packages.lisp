@@ -42,6 +42,8 @@
            define-image
            define-sound
            define-font
+           define-text
+           define-binary
            prepare-resources
            notice-resources
            make-font
@@ -79,6 +81,9 @@
 
            play-sound
            stop-sound
+
+           get-text
+           get-binary
 
            ;; deprecated
            initialize-resources
