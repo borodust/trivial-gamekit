@@ -556,3 +556,30 @@ Example
                                     (when (and (eq button :start) (eq state :pressed))
                                       (join-party (make-player-for-gamepad gamepad)))))
 ```")
+
+
+(docstring #'bind-gamepad-dpad
+  "Binds `action` to gamepad's dpad. When dpad state changes, action callback is
+invoked with gamepad opaque reference as a first argument and new dpad state as a
+second.
+
+Dpad states:
+```common_lisp
+  :up :down :left :right
+  :left-up :left-down
+  :right-up :right-down
+  :centered
+```
+
+Actions are not stacked together and would be overwritten for the same dpad
+state.
+
+Can only be called when gamekit instance is active (started via
+[`#'start`](#gamekit-start)).
+
+Example
+```common_lisp
+ (gamekit:bind-gamepad-state :up (lambda (gamepad)
+                                   (declare (ignore gamepad))
+                                   (jump *player*)))
+```")
