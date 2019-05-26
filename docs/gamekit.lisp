@@ -473,9 +473,8 @@ Can only be called when gamekit instance is active (started via
 [`#'start`](#gamekit-start)).
 
 Example:
-
 ```common_lisp
-  (gamekit:image-width 'example-package::logo)
+ (gamekit:image-width 'example-package::logo)
 ```")
 
 
@@ -487,7 +486,25 @@ Can only be called when gamekit instance is active (started via
 [`#'start`](#gamekit-start)).
 
 Example:
-
 ```common_lisp
-  (gamekit:image-height 'example-package::logo)
+ (gamekit:image-height 'example-package::logo)
+```")
+
+
+(docstring #'bind-any-gamepad
+  "Binds `action` to gamepad connection and disconnection events. Once one of
+those events happen, `action` is called with two arguments: `gamepad` - opaque
+reference to a gamepad that will be supplied as an argument to other
+gamepad-related actions, and `state` - which can be either `:connected` or
+`:disconnected` to catch connection and disconnection of a gamepad accordingly.
+
+If there were gamepads already connected before call to `#'bind-any-gamepad`,
+`action` is called for each one upon invocation.
+
+Example:
+```common_lisp
+ (gamekit:bind-any-gamepad (lambda (gamepad state)
+                             (if (eq :connected state)
+                                 (add-player-for-gamepad gamepad)
+                                 (pause-game-and-wait-for-player gamepad))))
 ```")
