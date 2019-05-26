@@ -583,3 +583,44 @@ Example
                                    (declare (ignore gamepad))
                                    (jump *player*)))
 ```")
+
+(docstring #'bind-gamepad-stick
+  "Binds `action` to gamepad's left or right stick. When position of the
+specified stick changes, action callback is invoked with `gamepad` opaque
+reference as a first argument, position's `x` and `y` as second and third
+arguments. `x` and `y` values are in [-1;1] range: stick up (0;1), stick
+down (0;-1), stick left (-1;0) and stick right (1;0).
+
+Sticks: `:left` and `:right`.
+
+Actions are not stacked together and would be overwritten for the same stick.
+
+Can only be called when gamekit instance is active (started via
+[`#'start`](#gamekit-start)).
+
+Example
+```common_lisp
+ (gamekit:bind-gamepad-stick :left (lambda (gamepad x y)
+                                     (declare (ignore gamepad))
+                                     (move-player *player* x y)))
+```")
+
+(docstring #'bind-gamepad-trigger
+  "Binds `action` to gamepad's left or right triggers. When value of the
+specified trigger changes, action callback is invoked with `gamepad` opaque
+reference as a first argument and new trigger value as second. Trigger values
+are in [0;1] range.
+
+Triggers: `:left` and `:right`.
+
+Actions are not stacked together and would be overwritten for the same trigger.
+
+Can only be called when gamekit instance is active (started via
+[`#'start`](#gamekit-start)).
+
+Example
+```common_lisp
+ (gamekit:bind-gamepad-trigger :right (lambda (gamepad value)
+                                        (declare (ignore gamepad))
+                                        (setf (shot-power *player*) value)))
+```")
