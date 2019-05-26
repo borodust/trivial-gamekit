@@ -514,8 +514,7 @@ Example:
 changes to the one specified, action callback is invoked with gamepad opaque
 reference as an argument. `state` can be either `:pressed` or `:released`.
 
-Actions are not stacked together and would be overwritten for the same gamepad,
-key and state.
+Actions are not stacked together and would be overwritten for the same button and state.
 
 Can only be called when gamekit instance is active (started via
 [`#'start`](#gamekit-start)).
@@ -532,8 +531,28 @@ Supported buttons:
 
 Example
 ```common_lisp
- (gamekit:bind-gamepad-button *gamepad* :start :pressed
+ (gamekit:bind-gamepad-button :start :pressed
                               (lambda (gamepad)
                                 (declare (ignore gamepad))
                                 (start-game)))
+```")
+
+
+(docstring #'bind-gamepad-any-button
+  "Binds `action` to all buttons of gamepads. When any button state of any
+gamepad changes, action callback is invoked with gamepad opaque reference as a
+first argument, gamepad's button as a second and button's state as a third argument.
+See [`#'bind-gamepad-button`](#gamekit-bind-gamepad-button) for available button
+values and states.
+
+Actions are not stacked together and would be overwritten on each function invocation.
+
+Can only be called when gamekit instance is active (started via
+[`#'start`](#gamekit-start)).
+
+Example
+```common_lisp
+ (gamekit:bind-gamepad-any-button (lambda (gamepad button state)
+                                    (when (and (eq button :start) (eq state :pressed))
+                                      (join-party (make-player-for-gamepad gamepad)))))
 ```")
