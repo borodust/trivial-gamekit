@@ -13,6 +13,7 @@
 (defclass gamekit-system ()
   ((keymap :initform nil)
    (gamepad-map :initform nil)
+   (gamepads :initform nil)
    (gamepad-action :initform nil)
    (cursor-action :initform nil)
    (cursor-position :initform (vec2 0 0))
@@ -132,18 +133,18 @@
 
 
 (defun register-gamepad (gamekit gamepad)
-  (with-slots (gamepad-map gamepad-action) gamekit
-    (setf (gethash gamepad gamepad-map) (make-hash-table))
+  (with-slots (gamepad-action gamepads) gamekit
+    (push gamepad gamepads)
     (when gamepad-action
       (funcall gamepad-action gamepad :connected))))
 
 
 (defun remove-gamepad (gamekit gamepad)
-  (with-slots (gamepad-map gamepad-action) gamekit
+  (with-slots (gamepad-action gamepads) gamekit
+    (deletef gamepads gamepad)
     (unwind-protect
          (when gamepad-action
-           (funcall gamepad-action gamepad :disconnected))
-      (remhash gamepad gamepad-map))))
+           (funcall gamepad-action gamepad :disconnected)))))
 
 
 (define-event-handler on-keyboard ((ev ge.host:keyboard-event) key state)
@@ -182,11 +183,10 @@
             (button (ge.host:button-from ev))
             (state (ge.host:state-from ev)))
         (flet ((process-button ()
-                 (when-let ((action-map (gethash gamepad gamepad-map)))
-                   (when-let ((action (gethash :any action-map)))
-                     (funcall action button state))
-                   (when-let ((action (getf (gethash button action-map) state)))
-                     (funcall action)))))
+                 (when-let ((action (gethash :any gamepad-map)))
+                   (funcall action gamepad button state))
+                 (when-let ((action (getf (gethash button gamepad-map) state)))
+                   (funcall action gamepad))))
           (push-action #'process-button))))))
 
 
@@ -196,9 +196,8 @@
       (let ((gamepad (ge.host:gamepad-from ev))
             (state (ge.host:state-from ev)))
         (flet ((process-dpad ()
-                 (when-let ((action-map (gethash gamepad gamepad-map)))
-                   (when-let ((action (getf (gethash :dpad action-map) state)))
-                     (funcall action)))))
+                 (when-let ((action (getf (gethash :dpad gamepad-map) state)))
+                   (funcall action gamepad))))
           (push-action #'process-dpad))))))
 
 
@@ -208,9 +207,8 @@
           (x (ge.host:x-from event))
           (y (ge.host:y-from event)))
       (flet ((process-stick ()
-               (when-let* ((action-map (gethash gamepad gamepad-map))
-                           (action (gethash stick action-map)))
-                 (funcall action x y))))
+               (when-let ((action (gethash stick gamepad-map)))
+                 (funcall action gamepad x y))))
         (push-action #'process-stick)))))
 
 
@@ -229,9 +227,8 @@
     (let ((gamepad (ge.host:gamepad-from event))
           (value (ge.host:value-from event)))
       (flet ((process-trigger ()
-               (when-let* ((action-map (gethash gamepad gamepad-map))
-                           (action (gethash trigger action-map)))
-                 (funcall action value))))
+               (when-let ((action (gethash trigger gamepad-map)))
+                 (funcall action gamepad value))))
         (push-action #'process-trigger)))))
 
 
@@ -403,60 +400,54 @@
 
 (defun bind-any-gamepad (action)
   (if-gamekit (gamekit)
-    (with-slots (gamepad-action gamepad-map) gamekit
-      (let ((new-action action))
-        (setf gamepad-action new-action)
-        (when new-action
-          (flet ((register-gamepads ()
-                   (loop for gamepad being the hash-key of gamepad-map
-                         do (funcall new-action gamepad :connected))))
-            (push-action #'register-gamepads)))))
+    (with-slots (gamepad-action gamepads) gamekit
+      (setf gamepad-action action)
+      (when action
+        (flet ((register-gamepads ()
+                 (loop for gamepad in gamepads
+                       do (funcall action gamepad :connected))))
+          (push-action #'register-gamepads))))
     (raise-binding-error)))
 
 
-(defun bind-gamepad-button (gamepad button state action)
+(defun bind-gamepad-button (button state action)
   (if-gamekit (gamekit)
     (with-slots (gamepad-map) gamekit
-      (when-let ((action-map (gethash gamepad gamepad-map)))
-        (setf (getf (gethash button action-map) state) action)))
+      (setf (getf (gethash button gamepad-map) state) action))
     (raise-binding-error)))
 
 
-(defun bind-gamepad-dpad (gamepad state action)
+(defun bind-gamepad-dpad (state action)
   (if-gamekit (gamekit)
     (with-slots (gamepad-map) gamekit
-      (when-let ((action-map (gethash gamepad gamepad-map)))
-        (setf (getf (gethash :dpad action-map) state) action)))
+      (setf (getf (gethash :dpad gamepad-map) state) action))
     (raise-binding-error)))
 
 
-(defun bind-gamepad-any-button (gamepad action)
+(defun bind-gamepad-any-button (action)
   (if-gamekit (gamekit)
     (with-slots (gamepad-map) gamekit
-      (when-let ((action-map (gethash gamepad gamepad-map)))
-        (setf (gethash :any action-map) action)))
+      (setf (gethash :any gamepad-map) action))
     (raise-binding-error)))
 
 
-(defun bind-gamepad-stick (gamepad stick action)
+(defun bind-gamepad-stick (stick action)
   (if-gamekit (gamekit)
     (with-slots (gamepad-map) gamekit
-      (when-let ((action-map (gethash gamepad gamepad-map)))
-        (let ((stick (ecase stick
-                       (:right :right-stick)
-                       (:left :left-stick))))
-          (setf (gethash stick action-map) action))))
+      (let ((stick (ecase stick
+                     (:right :right-stick)
+                     (:left :left-stick))))
+        (setf (gethash stick gamepad-map) action)))
     (raise-binding-error)))
 
 
-(defun bind-gamepad-trigger (gamepad trigger action)
+(defun bind-gamepad-trigger (trigger action)
   (if-gamekit (gamekit)
     (with-slots (gamepad-map) gamekit
-      (when-let ((action-map (gethash gamepad gamepad-map)))
-        (let ((trigger (ecase trigger
-                         (:right :right-trigger)
-                         (:left :left-trigger))))
-          (setf (gethash trigger action-map) action))))
+      (let ((trigger (ecase trigger
+                       (:right :right-trigger)
+                       (:left :left-trigger))))
+        (setf (gethash trigger gamepad-map) action)))
     (raise-binding-error)))
 
 
