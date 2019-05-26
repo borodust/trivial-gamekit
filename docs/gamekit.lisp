@@ -140,6 +140,8 @@ called when there's active game exists started earlier with
 
 Actions are not stacked together and would be overwritten for the same key and state.
 
+Can only be called when gamekit instance is active (started).
+
 Supported keys:
 ```common_lisp
   :space :apostrophe :comma :minus :period :slash
@@ -174,6 +176,29 @@ Example
 ```")
 
 
+(docstring #'bind-any-button
+  "Binds `action` to all buttons. When key state changes, action callback is
+invoked with two arguments: button as a first and its new state as a second
+argument.
+
+Can only be called when gamekit instance is active (started via
+[`#'start`](#gamekit-start)).
+
+For possible values for button and state parameters see documentation for
+ [`#'bind-button`](#gamekit-bind-button) function.
+
+Actions provided to this function are not stacked together and would be
+overwritten each time the function is called.
+
+
+Example
+```common_lisp
+ (gamekit:bind-any-button (lambda (button state)
+                            (when (and (eq button :space) (eq state :pressed))
+                              (shoot *player*))))
+```")
+
+
 (docstring #'bind-cursor
   "Binds action callback to a cursor movement event. Everytime user moves a
 cursor callback will be called with x and y of cursor coordinates within the
@@ -182,6 +207,8 @@ and y-axis pointing upwards.
 
 Actions doesn't stack together and would be overwritten each time
 `#'bind-cursor` is called.
+
+Can only be called when gamekit instance is active (started).
 
 Example:
 ```common_lisp
@@ -372,7 +399,7 @@ Example:
 
 (docstring #'get-text
   "Get text resource (a string) by id. `resource-id` must be a valid resource id
-previously registered with `['define-text](#gamekit-define-text)`.
+previously registered with [`'define-text`](#gamekit-define-text).
 
 ```common-lisp
  (gamekit:get-text 'example-package::example-text)
@@ -381,7 +408,7 @@ previously registered with `['define-text](#gamekit-define-text)`.
 
 (docstring #'get-binary
   "Get binary resource (a byte vector) by id. `resource-id` must be a valid
-resource id previously registered with `['define-binary](#gamekit-define-binary)`.
+resource id previously registered with [`'define-binary`](#gamekit-define-binary).
 
 ```common-lisp
  (gamekit:get-binary 'example-package::example-blob)
@@ -413,4 +440,54 @@ Example:
                               :build-directory \"/tmp/example-game/\"
                               :zip \"/usr/bin/zip\"
                               :lisp \"/usr/bin/sbcl\")
+```")
+
+
+(docstring #'viewport-width
+  "Returns width of a gamekit viewport (window) if there's an active gamekit
+instance (started via [`#'start`](#gamekit-start)) or nil otherwise.
+
+Example:
+
+```common_lisp
+  (gamekit:viewport-width)
+```")
+
+
+(docstring #'viewport-height
+  "Returns height of a gamekit viewport (window) if there's an active gamekit
+instance (started via [`#'start`](#gamekit-start)) or nil otherwise.
+
+Example:
+
+```common_lisp
+  (gamekit:viewport-height)
+```")
+
+
+(docstring #'image-width
+  "Returns width of an image by its id (defined with
+ [`#'define-image`](#gamekit-define-image)).
+
+Can only be called when gamekit instance is active (started via
+[`#'start`](#gamekit-start)).
+
+Example:
+
+```common_lisp
+  (gamekit:image-width 'example-package::logo)
+```")
+
+
+(docstring #'image-height
+  "Returns height of an image by its id (defined with
+ [`#'define-image`](#gamekit-define-image)).
+
+Can only be called when gamekit instance is active (started via
+[`#'start`](#gamekit-start)).
+
+Example:
+
+```common_lisp
+  (gamekit:image-height 'example-package::logo)
 ```")

@@ -49,9 +49,6 @@
            make-font
            calc-text-bounds
 
-           initialize-host
-           initialize-graphics
-           initialize-audio
            post-initialize
            pre-destroy
 
@@ -86,7 +83,11 @@
            get-binary
 
            ;; deprecated
+           initialize-host
+           initialize-graphics
+           initialize-audio
            initialize-resources
+
            import-image
            import-sound
            gamekit-system
