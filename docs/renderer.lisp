@@ -112,7 +112,7 @@
                             'image-width
                             'image-height
                             'calc-text-bounds)
-     (%render-documentation "playing-an-audio.md"
+     (%render-documentation "playing-audio.md"
                             'play-sound
                             'stop-sound)
      (%render-documentation "listening-to-input.md"
