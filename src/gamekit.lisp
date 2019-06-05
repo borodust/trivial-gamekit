@@ -5,10 +5,9 @@
 
 
 (defvar +origin+ (vec2 0.0 0.0))
-
-
 (defvar *black* (vec4 0 0 0 1))
 
+(defvar *gamekit-instance* nil)
 
 (defclass gamekit-system ()
   ((keymap :initform nil)
@@ -63,7 +62,7 @@
 
 
 (defun gamekit ()
-  (ge.app:app))
+  *gamekit-instance*)
 
 
 (defgeneric act (system)
@@ -343,7 +342,8 @@
           (configure-game this)
           (setf keymap (make-hash-table)
                 gamepad-map (make-hash-table)
-                resource-registry (make-instance 'gamekit-resource-registry)))
+                resource-registry (make-instance 'gamekit-resource-registry)
+                *gamekit-instance* this))
         (ge.host:for-host ()
           (ge.host:with-viewport-dimensions (width height)
             (setf viewport-width width
@@ -378,7 +378,8 @@
       (pre-destroy this)
       (log/debug "Disposing resources")
       (dispose-resources resource-registry)
-      (log/debug "Sweeping complete"))))
+      (log/debug "Sweeping complete")
+      (setf *gamekit-instance* nil))))
 
 
 (defun resource-by-id (id)
