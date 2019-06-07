@@ -22,7 +22,9 @@
    (prepare-resources :initform t)
    (button-action :initform nil)
    (viewport-width :initform 0)
-   (viewport-height :initform 0)))
+   (viewport-height :initform 0)
+   (canvas-width :initform 0)
+   (canvas-height :initform 0)))
 
 
 (defmethod initialize-instance ((this gamekit-system) &rest args &key depends-on)
@@ -94,10 +96,6 @@
   (:method (system) (declare (ignore system))))
 
 
-(ge.vg:defcanvas gamekit-canvas (next-method)
-  (funcall next-method))
-
-
 (defmethod initialize-resources :around ((system gamekit-system))
   (with-slots (resource-registry) system
     (let ((*resource-registry* resource-registry))
@@ -124,6 +122,18 @@
   (when-gamekit (gamekit)
     (with-slots (viewport-height) gamekit
       viewport-height)))
+
+
+(defun canvas-width ()
+  (when-gamekit (gamekit)
+    (with-slots (canvas-width) gamekit
+      canvas-width)))
+
+
+(defun canvas-height ()
+  (when-gamekit (gamekit)
+    (with-slots (canvas-height) gamekit
+      canvas-height)))
 
 
 (defmethod ge.app:draw :around ((this gamekit-system))
@@ -337,7 +347,10 @@
 
 
 (defmethod ge.app:configuration-flow ((this gamekit-system))
-  (with-slots (keymap gamepad-map resource-registry viewport-width viewport-height) this
+  (with-slots (keymap gamepad-map resource-registry
+               viewport-width viewport-height
+               canvas-width canvas-height)
+      this
     (>> (instantly ()
           (configure-game this)
           (setf keymap (make-hash-table)
@@ -348,6 +361,10 @@
           (ge.host:with-viewport-dimensions (width height)
             (setf viewport-width width
                   viewport-height height)))
+        (ge.gx:for-graphics ()
+          (let ((canvas (ge.app:app-canvas)))
+            (setf canvas-width (ge.vg:canvas-width canvas)
+                  canvas-height (ge.vg:canvas-height canvas))))
         (instantly ()
           (initialize-resources this)
           (%mount-for-executable this))

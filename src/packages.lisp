@@ -54,6 +54,8 @@
 
            viewport-width
            viewport-height
+           canvas-width
+           canvas-height
 
            bind-button
            bind-any-button
