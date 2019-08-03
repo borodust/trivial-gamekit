@@ -91,6 +91,7 @@
                             'define-binary
                             'make-font
                             'prepare-resources
+                            'dispose-resources
                             'notice-resources
                             'get-text
                             'get-binary)

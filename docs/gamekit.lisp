@@ -131,6 +131,22 @@ Example:
 ```")
 
 
+(docstring #'dispose-resources
+  "Disposes prepared resources asynchronously. `resource-names`
+should be symbols used previously registered with `define-*` macros.
+
+This function returns immediately. Attempts to use disposed resources will raise
+an error. To use resources again you would need to load them with
+[`#'prepare-resources`](#gamekit-prepare-resources).
+
+Example:
+```common-lisp
+ (gamekit:dispose-resources 'example-package::noto-sans
+                            'example-package::blop
+                            'example-package::logo)
+```")
+
+
 (docstring #'bind-button
   "Binds `action` to specified `key` `state`. When key state changes to the one specified,
 action callback is invoked with no arguments. `#'bind-button` function should be
