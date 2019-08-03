@@ -45,6 +45,7 @@
            define-text
            define-binary
            prepare-resources
+           dispose-resources
            notice-resources
            make-font
            calc-text-bounds

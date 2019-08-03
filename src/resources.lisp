@@ -74,6 +74,15 @@
                (cons (ge.rsc:load-resource resource-name) nil)))))
 
 
+(defun %dispose-resource (registry resource-name)
+  (with-slots (resources) registry
+    (when-let ((resource-info (gethash resource-name resources)))
+      (destructuring-bind (resource . disposable-p) resource-info
+        (when disposable-p
+          (dispose resource))
+        (setf (gethash resource-name resources) nil)))))
+
+
 (defun loading-flow (loader canvas-provider resource-names)
   (with-slots (resources) loader
     (unless (ge.ng:executablep)
@@ -95,11 +104,11 @@
              do (setf (gethash id resources) (cons resource disposable-p)))))))
 
 
-(defun dispose-resources (registry)
+(defun %dispose-resources (registry)
   (with-slots (resources) registry
     (loop for (resource . disposable-p) being the hash-value of resources
           when disposable-p
-          do (dispose resource))))
+            do (dispose resource))))
 
 
 (defun list-all-resources ()

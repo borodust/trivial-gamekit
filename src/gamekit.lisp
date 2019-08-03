@@ -298,7 +298,8 @@
 (defun push-action (action)
   (ge.app:inject-flow
    (instantly ()
-     (funcall action))))
+     (funcall action)))
+  (values))
 
 
 (defgeneric notice-resources (game &rest resource-names)
@@ -316,6 +317,15 @@
         (run (>> (loading-flow resource-registry #'ge.app:app-canvas resource-names)
                  (instantly ()
                    (push-action #'notify-game))))))))
+
+
+(defun dispose-resources (&rest names)
+  (let ((game (gamekit)))
+    (with-slots (resource-registry) game
+      (flet ((%%dispose ()
+               (loop for name in names
+                     do (%dispose-resource resource-registry name))))
+        (push-action #'%%dispose)))))
 
 
 (defun %mount-for-executable (this)
@@ -394,7 +404,7 @@
       (log/debug "Invoking pre-destroy hook")
       (pre-destroy this)
       (log/debug "Disposing resources")
-      (dispose-resources resource-registry)
+      (%dispose-resources resource-registry)
       (log/debug "Sweeping complete")
       (setf *gamekit-instance* nil))))
 
