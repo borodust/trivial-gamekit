@@ -356,6 +356,13 @@
       (instantly () (%act)))))
 
 
+(defun %update-canvas-dimensions (gamekit)
+  (with-slots (canvas-width canvas-height) gamekit
+    (let ((canvas (ge.app:app-canvas)))
+      (setf canvas-width (ge.vg:canvas-width canvas)
+            canvas-height (ge.vg:canvas-height canvas)))))
+
+
 (defmethod ge.app:configuration-flow ((this gamekit-system))
   (with-slots (keymap gamepad-map resource-registry
                viewport-width viewport-height
@@ -372,9 +379,7 @@
             (setf viewport-width width
                   viewport-height height)))
         (ge.gx:for-graphics ()
-          (let ((canvas (ge.app:app-canvas)))
-            (setf canvas-width (ge.vg:canvas-width canvas)
-                  canvas-height (ge.vg:canvas-height canvas))))
+          (%update-canvas-dimensions this))
         (instantly ()
           (initialize-resources this)
           (%mount-for-executable this))
@@ -407,6 +412,12 @@
       (%dispose-resources resource-registry)
       (log/debug "Sweeping complete")
       (setf *gamekit-instance* nil))))
+
+
+(ge.ng:define-event-handler on-viewport-update ((ev ge.host:viewport-size-change-event))
+  (when-gamekit (gamekit)
+    (ge.app:inject-flow (ge.gx:for-graphics ()
+                          (%update-canvas-dimensions gamekit)))))
 
 
 (defun resource-by-id (id)
