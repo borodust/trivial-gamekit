@@ -22,7 +22,9 @@
 (defun game-resource-path (symbol)
   (reduce #'merge-pathnames (list (symbol-name symbol)
                                   (fad:pathname-as-directory
-                                   (package-name (symbol-package symbol)))
+                                   (if-let ((package (symbol-package symbol)))
+                                     (package-name package)
+                                     (error "Uninterned symbols are not allowed")))
                                   +game-resource-root+)))
 
 
