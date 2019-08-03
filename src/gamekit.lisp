@@ -319,11 +319,11 @@
                    (push-action #'notify-game))))))))
 
 
-(defun dispose-resources (&rest names)
+(defun dispose-resources (&rest resource-names)
   (let ((game (gamekit)))
     (with-slots (resource-registry) game
       (flet ((%%dispose ()
-               (loop for name in names
+               (loop for name in resource-names
                      do (%dispose-resource resource-registry name))))
         (push-action #'%%dispose)))))
 
