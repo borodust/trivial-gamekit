@@ -195,7 +195,7 @@
 (defmacro define-text (name path &key encoding)
   `(progn
      (register-game-resource ',name ,path ()
-                             :text :encoding ,encoding)
+                             :text :encoding ,(or encoding :utf-8))
      (autoprepare ',name)))
 
 
