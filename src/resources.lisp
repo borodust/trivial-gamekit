@@ -173,38 +173,33 @@
 
 
 (defmacro define-image (name path &key use-nearest-interpolation)
-  (once-only (name)
-    `(progn
-       (register-game-resource ,name ,path
-                               `(:use-nearest-interpolation ,,use-nearest-interpolation)
-                               :image :type :png)
-       (autoprepare ,name))))
+  `(progn
+     (register-game-resource ',name ,path
+                             `(:use-nearest-interpolation ,,use-nearest-interpolation)
+                             :image :type :png)
+     (autoprepare ',name)))
 
 
 (defmacro define-sound (name path)
-  (once-only (name)
-    `(progn
-       (register-game-resource ,name ,path () :audio)
-       (autoprepare ,name))))
+  `(progn
+     (register-game-resource ',name ,path () :audio)
+     (autoprepare ',name)))
 
 
 (defmacro define-font (name path)
-  (once-only (name)
-    `(progn
-       (register-game-resource ,name ,path () :font :type :ttf)
-       (autoprepare ,name))))
+  `(progn
+     (register-game-resource ',name ,path () :font :type :ttf)
+     (autoprepare ',name)))
 
 
 (defmacro define-text (name path &key encoding)
-  (once-only (name)
-    `(progn
-       (register-game-resource ,name ,path ()
-                               :text :encoding ,encoding)
-       (autoprepare ,name))))
+  `(progn
+     (register-game-resource ',name ,path ()
+                             :text :encoding ,encoding)
+     (autoprepare ',name)))
 
 
 (defmacro define-binary (name path)
-  (once-only (name)
-    `(progn
-       (register-game-resource ,name ,path () :binary)
-       (autoprepare ,name))))
+  `(progn
+     (register-game-resource ',name ,path () :binary)
+     (autoprepare ',name)))

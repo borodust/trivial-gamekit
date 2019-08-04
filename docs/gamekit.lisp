@@ -332,7 +332,7 @@ macro.
 
 Example:
 ```common-lisp
- (gamekit:define-image 'example-package::logo \"images/logo.png\")
+ (gamekit:define-image example-package::logo \"images/logo.png\")
 ```")
 
 
@@ -348,7 +348,7 @@ macro.
 
 Example:
 ```common-lisp
- (gamekit:define-sound 'example-package::blop \"sounds/blop.ogg\")
+ (gamekit:define-sound example-package::blop \"sounds/blop.ogg\")
 ```")
 
 
@@ -364,7 +364,7 @@ macro.
 
 Example:
 ```common-lisp
- (gamekit:define-font 'example-package::noto-sans \"fonts/NotoSans-Regular.ttf\")
+ (gamekit:define-font example-package::noto-sans \"fonts/NotoSans-Regular.ttf\")
 ```")
 
 
@@ -380,7 +380,7 @@ macro.
 
 Example:
 ```common-lisp
- (gamekit:define-text 'example-package::example-text \"dialog.txt\" :encoding :utf-8)
+ (gamekit:define-text example-package::example-text \"dialog.txt\" :encoding :utf-8)
 ```")
 
 
@@ -395,7 +395,7 @@ macro.
 
 Example:
 ```common-lisp
- (gamekit:define-binary 'example-package::example-blob \"blob.data\")
+ (gamekit:define-binary example-package::example-blob \"blob.data\")
 ```")
 
 
