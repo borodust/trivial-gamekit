@@ -158,8 +158,7 @@
 (defun register-game-resource (id path parameters &rest handler-args)
   (check-type id symbol)
   (let ((resource-path (game-resource-path id)))
-    (ge.rsc:register-resource resource-path
-                              (apply #'ge.rsc:make-resource-handler handler-args))
+    (apply #'ge.rsc:register-resource resource-path handler-args)
     (setf (assoc-value *resources* id) (append (list (first handler-args) path)
                                                parameters))))
 
