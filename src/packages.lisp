@@ -24,8 +24,8 @@
            subt
            div
            normalize
-           cross-product
-           dot-product
+           cross
+           dot
            lerp
            x
            y
