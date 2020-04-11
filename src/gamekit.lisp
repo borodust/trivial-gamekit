@@ -303,7 +303,7 @@
 
 
 (defgeneric notice-resources (game &rest resource-names)
-  (:method ((this gamekit-system) &rest resource-names)
+  (:method (this &rest resource-names)
     (declare (ignore this))
     (log:info "Resources loaded: ~A" resource-names)))
 
@@ -565,9 +565,9 @@
   (draw-text string (vec2 x y) :fill-color color))
 
 
-(defun draw-text (string origin &key (fill-color *black*) (font *font*))
-  (ge.vg:with-font (font)
-    (ge.vg:draw-text origin string fill-color)))
+(defun draw-text (string origin &key fill-color font)
+  (ge.vg:with-font ((or font *font*))
+    (ge.vg:draw-text origin string (or fill-color *black*))))
 
 
 (defun get-text (resource-id)
