@@ -304,8 +304,12 @@
 
 (defgeneric notice-resources (game &rest resource-names)
   (:method (this &rest resource-names)
-    (declare (ignore this))
-    (log:info "Resources loaded: ~A" resource-names)))
+    (declare (ignore this resource-names))))
+
+
+(defmethod notice-resources ((this gamekit-system) &rest resource-names)
+  (declare (ignore this))
+  (log:info "Resources loaded: ~A" resource-names))
 
 
 (defun prepare-resources (&rest resource-names)
@@ -526,7 +530,8 @@
      ,@body))
 
 
-(defun draw-image (position image-id &key origin width height)
+(defun draw-image (position image-id &key origin width height
+                                       mirror-y mirror-x)
   (when-let ((image (resource-by-id image-id)))
     (let* ((image-origin (or origin +origin+))
            (image-width (if width
@@ -536,7 +541,15 @@
                              height
                              (ge.vg:image-paint-height image))))
       (ge.vg:with-retained-canvas
-        (ge.vg:translate-canvas (- (x position) (x image-origin)) (- (y position) (y image-origin)))
+        (when mirror-y
+          (ge.vg:translate-canvas 0 image-height)
+          (ge.vg:scale-canvas 1 -1))
+        (when mirror-x
+          (ge.vg:translate-canvas image-width 0)
+          (ge.vg:scale-canvas -1 1))
+
+        (ge.vg:translate-canvas (x position) (y position))
+        (ge.vg:translate-canvas (- (x image-origin)) (- (y image-origin)))
         (draw-rect image-origin image-width image-height :fill-paint image)))))
 
 
