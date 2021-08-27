@@ -61,6 +61,7 @@
            bind-button
            bind-any-button
            bind-cursor
+           bind-scroll
            bind-any-gamepad
            bind-gamepad-button
            bind-gamepad-any-button
