@@ -21,6 +21,7 @@
    (resource-registry)
    (prepare-resources :initform t)
    (button-action :initform nil)
+   (scroll-action :initform nil)
    (viewport-width :initform 0)
    (viewport-height :initform 0)
    (canvas-width :initform 0)
@@ -279,6 +280,14 @@
                           state)))
           (push-action #'call-action))))))
 
+(define-event-handler on-scroll-event ((ev ge.host:scroll-event) x-offset y-offset)
+  (when-gamekit (gamekit)
+    (with-slots (keymap scroll-action) gamekit
+      (when scroll-action
+        (flet ((call-action ()
+                 (funcall scroll-action x-offset y-offset)))
+          (push-action #'call-action))))))
+
 
 (define-event-handler on-cursor ((ev ge.host:cursor-event) x y)
   (when-gamekit (gamekit)
@@ -507,6 +516,13 @@
     (with-slots (cursor-action) gamekit
       (with-system-lock-held (gamekit)
         (setf cursor-action action)))
+    (raise-binding-error)))
+
+(defun bind-scroll (action)
+  (if-gamekit (gamekit)
+    (with-slots (scroll-action) gamekit
+      (with-system-lock-held (gamekit)
+        (setf scroll-action action)))
     (raise-binding-error)))
 
 
