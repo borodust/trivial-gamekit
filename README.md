@@ -47,4 +47,4 @@ See `trivial-gamekit` external [documentation](https://borodust.org/projects/tri
 
 ## Help
 
-`#lispgames` at `irc://chat.freenode.net`
+`#lispgames` or [`#cl-bodge`](https://web.libera.chat/gamja/?channel=#cl-bodge) at `irc.libera.chat:6697`
